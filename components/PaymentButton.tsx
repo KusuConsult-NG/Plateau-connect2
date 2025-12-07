@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import PaystackPop from '@paystack/inline-js'
 
 interface PaymentButtonProps {
     email: string
@@ -20,7 +19,8 @@ export default function PaymentButton({
     onClose,
     className = 'btn-success w-full py-3',
 }: PaymentButtonProps) {
-    const handlePayment = () => {
+    const handlePayment = async () => {
+        const PaystackPop = (await import('@paystack/inline-js')).default
         const paystack = new PaystackPop()
 
         paystack.newTransaction({
