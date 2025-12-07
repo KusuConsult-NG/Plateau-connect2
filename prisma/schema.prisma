@@ -121,7 +121,6 @@ model DriverProfile {
 
 model Ride {
   id                String      @id @default(cuid())
-  rideId            String      @unique @default(cuid())
   
   // Rider Information
   riderId           String
