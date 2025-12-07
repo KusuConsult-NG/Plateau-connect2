@@ -30,10 +30,22 @@ export default function SignupPage() {
                 body: JSON.stringify(formData),
             })
 
-            const data = await response.json()
+            let data;
+            const responseText = await response.text();
+            console.log('[Debug] Values:', response.status, responseText);
+
+            try {
+                data = JSON.parse(responseText);
+            } catch (e) {
+                console.error('[Debug] Failed to parse JSON:', e);
+                // If it's not JSON, it's likely an infrastructure error (HTML)
+                setError(`Server Error (${response.status}): The server encountered an issue.`);
+                setLoading(false);
+                return;
+            }
 
             if (!response.ok) {
-                setError(data.error || 'An error occurred')
+                setError(data.error || `Error ${response.status}: ${JSON.stringify(data)}`);
                 setLoading(false)
                 return
             }
