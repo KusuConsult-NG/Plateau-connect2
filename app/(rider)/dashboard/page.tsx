@@ -9,17 +9,64 @@ import { formatCurrency } from '@/lib/utils'
 export const dynamic = 'force-dynamic'
 
 export default function RiderDashboard() {
-    const [pickupLocation, setPickupLocation] = useState('')
-    const [destination, setDestination] = useState('')
+    const { data: session } = useSession()
+    const router = useRouter()
+    const [pickupLocationId, setPickupLocationId] = useState('')
+    const [destinationId, setDestinationId] = useState('')
     const [departureTime, setDepartureTime] = useState('')
     const [selectedRideType, setSelectedRideType] = useState('FOUR_SEATER')
+    const [loading, setLoading] = useState(false)
+
+    const handleBookRide = async () => {
+        if (!pickupLocationId || !destinationId || !departureTime) {
+            alert('Please fill in all fields')
+            return
+        }
+
+        const pickupTerminal = TERMINALS.find(t => t.id === pickupLocationId)
+        const destinationTerminal = TERMINALS.find(t => t.id === destinationId)
+
+        if (!pickupTerminal || !destinationTerminal) return
+
+        setLoading(true)
+        try {
+            const response = await fetch('/api/rides', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pickupLocation: pickupTerminal.name,
+                    pickupLatitude: pickupTerminal.lat,
+                    pickupLongitude: pickupTerminal.lng,
+                    destination: destinationTerminal.name,
+                    destinationLatitude: destinationTerminal.lat,
+                    destinationLongitude: destinationTerminal.lng,
+                    rideType: selectedRideType,
+                    metadata: { departureTime } // Pass departure time in metadata/notes if schema supports it or just as part of the ride details
+                }),
+            })
+
+            if (!response.ok) {
+                const data = await response.json()
+                throw new Error(data.error || 'Failed to book ride')
+            }
+
+            const data = await response.json()
+            alert('Ride booked successfully!')
+            router.push('/dashboard/trips')
+        } catch (error) {
+            console.error('Booking error:', error)
+            alert(error instanceof Error ? error.message : 'Failed to book ride')
+        } finally {
+            setLoading(false)
+        }
+    }
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Greeting with Gradient */}
             <div className="mb-8 animate-slideUp">
                 <h1 className="text-5xl font-bold mb-3">
-                    Hello, <span className="gradient-text">David!</span>
+                    Hello, <span className="gradient-text">{session?.user?.name?.split(' ')[0] || 'Rider'}!</span>
                 </h1>
                 <p className="text-dark-text-secondary text-lg">✨ Where would you like to go today?</p>
             </div>
@@ -49,13 +96,13 @@ export default function RiderDashboard() {
                                     <div className="relative group">
                                         <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-success w-5 h-5 z-10 pointer-events-none" />
                                         <select
-                                            value={pickupLocation}
-                                            onChange={(e) => setPickupLocation(e.target.value)}
+                                            value={pickupLocationId}
+                                            onChange={(e) => setPickupLocationId(e.target.value)}
                                             className="input-field !pl-12 appearance-none cursor-pointer group-hover:border-success/50 transition-all"
                                         >
                                             <option value="">Select Departure Terminal</option>
                                             {TERMINALS.map((terminal) => (
-                                                <option key={terminal.id} value={terminal.name}>
+                                                <option key={terminal.id} value={terminal.id}>
                                                     {terminal.name} ({terminal.region})
                                                 </option>
                                             ))}
@@ -71,13 +118,13 @@ export default function RiderDashboard() {
                                     <div className="relative group">
                                         <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-error w-5 h-5 z-10 pointer-events-none" />
                                         <select
-                                            value={destination}
-                                            onChange={(e) => setDestination(e.target.value)}
+                                            value={destinationId}
+                                            onChange={(e) => setDestinationId(e.target.value)}
                                             className="input-field !pl-12 appearance-none cursor-pointer group-hover:border-error/50 transition-all"
                                         >
                                             <option value="">Select Destination Terminal</option>
                                             {TERMINALS.map((terminal) => (
-                                                <option key={terminal.id} value={terminal.name}>
+                                                <option key={terminal.id} value={terminal.id}>
                                                     {terminal.name} ({terminal.region})
                                                 </option>
                                             ))}
@@ -149,9 +196,19 @@ export default function RiderDashboard() {
                             </div>
 
                             {/* Request Ride Button with Gradient */}
-                            <button className="btn-success w-full py-4 text-lg font-bold group flex items-center justify-center space-x-2 mt-6">
-                                <span>Book Scheduled Ride</span>
-                                <FiArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            <button
+                                onClick={handleBookRide}
+                                disabled={loading}
+                                className="btn-success w-full py-4 text-lg font-bold group flex items-center justify-center space-x-2 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? (
+                                    <span className="shimmer-loader w-6 h-6 rounded-full block"></span>
+                                ) : (
+                                    <>
+                                        <span>Book Scheduled Ride</span>
+                                        <FiArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>

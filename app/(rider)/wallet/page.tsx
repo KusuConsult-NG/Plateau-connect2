@@ -1,9 +1,12 @@
 'use client'
 
+import { useSession } from 'next-auth/react'
+import PaymentButton from '@/components/PaymentButton'
 import { FiCreditCard, FiPlus, FiDollarSign, FiActivity, FiMapPin } from 'react-icons/fi'
 import { formatCurrency } from '@/lib/utils'
 
 export default function WalletPage() {
+    const { data: session } = useSession()
     return (
         <div className="max-w-4xl mx-auto px-4 py-8">
             <div className="mb-8 animate-slideUp">
@@ -21,9 +24,13 @@ export default function WalletPage() {
                         <p className="text-blue-100 font-medium mb-1">Total Balance</p>
                         <h2 className="text-4xl font-bold mb-6">{formatCurrency(4500)}</h2>
                         <div className="flex space-x-3">
-                            <button className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center">
-                                <FiPlus className="mr-1" /> Add Funds
-                            </button>
+                            {/* Integrated Paystack Button */}
+                            <PaymentButton
+                                email={session?.user?.email || 'user@example.com'}
+                                amount={5000}
+                                onSuccess={(reference) => alert(`Payment successful! Ref: ${reference}`)}
+                                className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center"
+                            />
                             <button className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
                                 Withdraw
                             </button>
