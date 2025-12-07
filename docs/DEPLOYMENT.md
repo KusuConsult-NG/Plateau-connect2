@@ -1,4 +1,4 @@
-# Pre-Deployment Checklist for RideJos
+# Pre-Deployment Checklist for Plateau Connect
 
 Complete this checklist before deploying to your live server.
 
@@ -492,4 +492,4 @@ Error: Invalid src prop
 
 ---
 
-**Ready to deploy?** Follow this checklist step by step, and your RideJos platform will be live and secure! 🚀
+**Ready to deploy?** Follow this checklist step by step, and your Plateau Connect platform will be live and secure! 🚀

@@ -68,7 +68,7 @@ export default function DriverOnboarding() {
             <aside className="hidden lg:block w-96 bg-dark-bg-secondary border-r border-dark-border p-8">
                 <div className="mb-8">
                     <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-primary to-green-500 bg-clip-text text-transparent">
-                        RidePlateau
+                        Plateau Connect
                     </h2>
                     <p className="text-dark-text-secondary text-sm">Driver Partner Application</p>
                 </div>

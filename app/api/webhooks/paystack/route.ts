@@ -87,9 +87,9 @@ async function handleChargeSuccess(data: any) {
             data: {
                 status: 'COMPLETED',
                 paidAt: new Date(),
-                metadata: {
-                    paystack_data: data,
-                },
+                // metadata: {
+                //     paystack_data: data,
+                // },
             },
         })
 

@@ -1,4 +1,4 @@
-# RideJos - Ride-Hailing Platform
+# Plateau Connect - Ride-Hailing Platform
 
 A comprehensive ride-hailing platform for Jos, Plateau State, Nigeria, built with Next.js 14, TypeScript, Prisma, and PostgreSQL.
 
@@ -40,7 +40,7 @@ A comprehensive ride-hailing platform for Jos, Plateau State, Nigeria, built wit
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd RideJos
+   cd Plateau-Connect
    ```
 
 2. **Install dependencies**
@@ -88,7 +88,7 @@ A comprehensive ride-hailing platform for Jos, Plateau State, Nigeria, built wit
 ## Project Structure
 
 ```
-RideJos/
+Plateau-Connect/
 ├── app/
 │   ├── (admin)/          # Admin dashboard
 │   ├── (auth)/           # Login/Signup pages
@@ -281,7 +281,7 @@ npx prisma generate     # Regenerate client
 
 For questions or issues:
 - Check the `/dashboard/support` page
-- Email: support@ridejos.com
+- Email: support@plateauconnect.com
 - Phone: +234 XXX XXX XXXX
 
 ## License

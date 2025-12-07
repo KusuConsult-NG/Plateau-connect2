@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcrypt'
 
 // Hardcoded invite codes for now - in production, store these in database
 const VALID_INVITE_CODES = [

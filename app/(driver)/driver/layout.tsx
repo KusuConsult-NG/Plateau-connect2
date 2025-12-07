@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { FiGrid, FiDollarSign, FiClock, FiSettings, FiHelpCircle } from 'react-icons/fi'
+import { FiGrid, FiDollarSign, FiClock, FiSettings, FiHelpCircle, FiMapPin } from 'react-icons/fi'
 
 const navigation = [
     { name: 'Dashboard', href: '/driver', icon: FiGrid },
@@ -16,73 +16,86 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
 
     return (
         <div className="min-h-screen bg-dark-bg flex">
-            {/* Sidebar */}
-            <aside className="w-64 bg-dark-bg-secondary border-r border-dark-border flex flex-col">
+            {/* Sidebar with Glassmorphism */}
+            <aside className="w-72 bg-dark-bg-secondary/50 backdrop-blur-xl border-r border-dark-border flex flex-col relative overflow-hidden">
+                {/* Background Gradient */}
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none"></div>
+
                 {/* Brand & Profile */}
-                <div className="p-6 border-b border-dark-border">
-                    <Link href="/driver" className="flex items-center space-x-2 mb-4">
-                        <span className="text-2xl">🚗</span>
-                        <span className="text-xl font-bold">JosRide</span>
+                <div className="p-6 border-b border-dark-border/50 relative z-10">
+                    <Link href="/driver" className="flex items-center space-x-3 mb-8 group">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-brand flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300">
+                            <FiMapPin className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-xl font-bold gradient-text">Plateau Connect</span>
                     </Link>
 
-                    <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-                            <span className="text-sm font-medium">JD</span>
+                    <div className="flex items-center space-x-4 p-4 rounded-xl bg-dark-bg-tertiary/50 border border-dark-border hover:border-primary/30 transition-colors">
+                        <div className="relative">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
+                                <span className="text-sm font-bold text-white">JD</span>
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-success rounded-full border-2 border-dark-bg-tertiary"></div>
                         </div>
                         <div>
-                            <p className="font-medium">John Doe</p>
-                            <p className="text-xs text-success">Online</p>
+                            <p className="font-bold text-white">John Doe</p>
+                            <div className="flex items-center space-x-1.5">
+                                <span className="w-2 h-2 rounded-full bg-success animate-pulse"></span>
+                                <p className="text-xs text-success font-medium">Online</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 p-4 space-y-1">
+                <nav className="flex-1 p-4 space-y-1.5 relative z-10">
                     {navigation.map((item) => {
                         const isActive = pathname === item.href
                         return (
                             <Link
                                 key={item.name}
                                 href={item.href}
-                                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                                        ? 'bg-primary text-white'
-                                        : 'text-dark-text-secondary hover:bg-dark-bg-tertiary hover:text-white'
+                                className={`flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 group ${isActive
+                                    ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/25'
+                                    : 'text-dark-text-secondary hover:bg-dark-bg-tertiary hover:text-white hover:pl-5'
                                     }`}
                             >
-                                <item.icon className="w-5 h-5" />
-                                <span>{item.name}</span>
+                                <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'group-hover:text-primary transition-colors'}`} />
+                                <span className="font-medium">{item.name}</span>
                             </Link>
                         )
                     })}
                 </nav>
 
                 {/* Bottom Actions */}
-                <div className="p-4 border-t border-dark-border space-y-2">
+                <div className="p-4 border-t border-dark-border/50 space-y-2 relative z-10">
                     <Link
                         href="/driver/settings"
-                        className="flex items-center space-x-3 px-4 py-2 text-dark-text-secondary hover:text-white hover:bg-dark-bg-tertiary rounded-lg transition-colors"
+                        className="flex items-center space-x-3 px-4 py-3 text-dark-text-secondary hover:text-white hover:bg-dark-bg-tertiary rounded-xl transition-colors"
                     >
                         <FiSettings className="w-5 h-5" />
-                        <span>Settings</span>
+                        <span className="font-medium">Settings</span>
                     </Link>
                     <Link
                         href="/driver/help"
-                        className="flex items-center space-x-3 px-4 py-2 text-dark-text-secondary hover:text-white hover:bg-dark-bg-tertiary rounded-lg transition-colors"
+                        className="flex items-center space-x-3 px-4 py-3 text-dark-text-secondary hover:text-white hover:bg-dark-bg-tertiary rounded-xl transition-colors"
                     >
                         <FiHelpCircle className="w-5 h-5" />
-                        <span>Help</span>
+                        <span className="font-medium">Help</span>
                     </Link>
                     <button
                         onClick={() => signOut({ callbackUrl: '/login' })}
-                        className="btn-danger w-full"
+                        className="w-full mt-4 py-3 rounded-xl border border-error/30 text-error hover:bg-error hover:text-white transition-all duration-300 font-medium flex items-center justify-center space-x-2"
                     >
-                        Go Offline
+                        <span>Go Offline</span>
                     </button>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-auto">{children}</main>
+            <main className="flex-1 overflow-auto bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-dark-bg to-dark-bg">
+                {children}
+            </main>
         </div>
     )
 }

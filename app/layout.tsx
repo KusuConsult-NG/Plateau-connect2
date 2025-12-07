@@ -5,9 +5,11 @@ import { Inter } from 'next/font/google'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-    title: 'RideJos - Ride-Hailing Platform for Plateau State',
-    description: 'Book affordable and reliable rides across Jos, Plateau State',
+    title: 'Plateau Connect - Premium Ride-Hailing for Plateau State',
+    description: 'Experience the future of transportation in Jos. Reliable, safe, and premium rides at your fingertips.',
 }
+
+import { Providers } from './providers'
 
 export default function RootLayout({
     children,
@@ -16,7 +18,9 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <body className={inter.className}>{children}</body>
+            <body className={inter.className}>
+                <Providers>{children}</Providers>
+            </body>
         </html>
     )
 }
