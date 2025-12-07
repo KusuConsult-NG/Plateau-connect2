@@ -51,7 +51,7 @@ export default function RiderDashboard() {
                                         <select
                                             value={pickupLocation}
                                             onChange={(e) => setPickupLocation(e.target.value)}
-                                            className="input-field pl-12 appearance-none cursor-pointer group-hover:border-success/50 transition-all"
+                                            className="input-field !pl-12 appearance-none cursor-pointer group-hover:border-success/50 transition-all"
                                         >
                                             <option value="">Select Departure Terminal</option>
                                             {TERMINALS.map((terminal) => (
@@ -73,7 +73,7 @@ export default function RiderDashboard() {
                                         <select
                                             value={destination}
                                             onChange={(e) => setDestination(e.target.value)}
-                                            className="input-field pl-12 appearance-none cursor-pointer group-hover:border-error/50 transition-all"
+                                            className="input-field !pl-12 appearance-none cursor-pointer group-hover:border-error/50 transition-all"
                                         >
                                             <option value="">Select Destination Terminal</option>
                                             {TERMINALS.map((terminal) => (
@@ -96,7 +96,7 @@ export default function RiderDashboard() {
                                     <select
                                         value={departureTime}
                                         onChange={(e) => setDepartureTime(e.target.value)}
-                                        className="input-field pl-12 appearance-none cursor-pointer group-hover:border-primary/50 transition-all"
+                                        className="input-field !pl-12 appearance-none cursor-pointer group-hover:border-primary/50 transition-all"
                                     >
                                         <option value="">Select Departure Time</option>
                                         {DEPARTURE_TIMES.map((time) => (
