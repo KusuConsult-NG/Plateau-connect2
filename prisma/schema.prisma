@@ -169,8 +169,8 @@ model Payment {
   id                String          @id @default(cuid())
   
   // Relationship
-  rideId            String          @unique
-  ride              Ride            @relation(fields: [rideId], references: [id])
+  rideId            String?         @unique
+  ride              Ride?           @relation(fields: [rideId], references: [id])
   userId            String
   user              User            @relation(fields: [userId], references: [id])
   

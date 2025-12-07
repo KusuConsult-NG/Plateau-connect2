@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { PaymentMethodType } from '@prisma/client'
 
 export async function POST(request: Request) {
     try {
@@ -21,18 +22,7 @@ export async function POST(request: Request) {
             )
         }
 
-        // Create Payment Record (Pending)
-        // Note: For funding wallet, we might not have a rideId.
-        // We'll need to make rideId optional in schema or handle wallet funding differently.
-        // For now, let's assume this is for a specific ride or general transaction.
-
-        // If funding wallet, we might want to create a Transaction model or use Payment model flexibly.
-        // Given current Schema, Payment requires rideId. 
-        // Let's modify logic to optionally check rideId or strictly use it for Rides.
-
-        // If this is called AFTER successful Paystack popup transaction (verification):
-        // We verify the transaction with Paystack API.
-
+        // Verify with Paystack
         const verifyResponse = await fetch(
             `https://api.paystack.co/transaction/verify/${reference}`,
             {
@@ -51,13 +41,58 @@ export async function POST(request: Request) {
             )
         }
 
-        // Determine if this was for a ride or wallet funding
-        // Assuming metadata contains context
+        // Check if payment already exists (idempotency)
+        const existingPayment = await prisma.payment.findUnique({
+            where: { transactionRef: reference },
+        })
+
+        if (existingPayment) {
+            return NextResponse.json({
+                success: true,
+                message: 'Payment already recorded',
+                data: existingPayment
+            })
+        }
+
+        // Create Payment Record
+        // Extract rideId from Paystack metadata if available (preferred) or request metadata
+        const paystackMeta = verifyData.data.metadata || {}
+        const rideId = paystackMeta.rideId || metadata?.rideId
+
+        const payment = await prisma.payment.create({
+            data: {
+                userId: session.user.id,
+                amount: amount,
+                currency: 'NGN',
+                status: 'COMPLETED',
+                provider: 'paystack',
+                transactionRef: reference,
+                paymentMethod: 'CARD', // Default to CARD for Paystack
+                paidAt: new Date(),
+                gatewayResponse: verifyData.data,
+                // Connect ride if ID exists
+                ride: rideId ? { connect: { id: rideId } } : undefined,
+            },
+        })
+
+        // If linked to a ride, update the ride status
+        if (rideId) {
+            await prisma.ride.update({
+                where: { id: rideId },
+                data: {
+                    status: 'COMPLETED', // Or keep as is, but mark paid via relation
+                    // In many apps, payment happens after ride? 
+                    // Or before? If pre-payment, maybe 'ACCEPTED' -> 'PAID'.
+                    // For now, let's just ensure payment is linked. 
+                    // We can validly say the ride flow involves payment.
+                },
+            })
+        }
 
         return NextResponse.json({
             success: true,
-            message: 'Payment verified',
-            data: verifyData.data
+            message: 'Payment verified and recorded',
+            data: payment
         })
 
     } catch (error) {

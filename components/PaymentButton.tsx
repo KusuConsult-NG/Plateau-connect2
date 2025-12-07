@@ -6,6 +6,7 @@ interface PaymentButtonProps {
     email: string
     amount: number
     metadata?: any
+    text?: string
     onSuccess?: (reference: string) => void
     onClose?: () => void
     className?: string
@@ -15,6 +16,7 @@ export default function PaymentButton({
     email,
     amount,
     metadata,
+    text = 'Fund Wallet',
     onSuccess,
     onClose,
     className = 'btn-success w-full py-3',
@@ -43,7 +45,7 @@ export default function PaymentButton({
 
     return (
         <button onClick={handlePayment} className={className}>
-            Fund Wallet (₦{amount.toLocaleString()})
+            {text} (₦{amount.toLocaleString()})
         </button>
     )
 }

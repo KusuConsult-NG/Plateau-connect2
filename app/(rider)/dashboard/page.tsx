@@ -53,7 +53,7 @@ export default function RiderDashboard() {
 
             const data = await response.json()
             alert('Ride booked successfully!')
-            router.push('/dashboard/trips')
+            router.push('/trips')
         } catch (error) {
             console.error('Booking error:', error)
             alert(error instanceof Error ? error.message : 'Failed to book ride')
