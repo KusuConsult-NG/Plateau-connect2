@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server'
-// import { prisma } from '@/lib/db'
-// import bcrypt from 'bcrypt'
+import { prisma } from '@/lib/db'
+import bcrypt from 'bcryptjs'
 
 export async function POST(request: Request) {
-    return NextResponse.json({ message: 'Debug mode: Imports commented out' })
-    /*
     try {
         const body = await request.json()
         const { email, password, name, role, phone } = body
@@ -63,7 +61,6 @@ export async function POST(request: Request) {
             { status: 500 }
         )
     }
-    */
 }
 
 export async function GET() {
