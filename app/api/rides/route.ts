@@ -130,7 +130,7 @@ export async function POST(request: Request) {
     } catch (error) {
         console.error('Error creating ride:', error)
         return NextResponse.json(
-            { error: 'Failed to create ride' },
+            { error: `Failed to create ride: ${error instanceof Error ? error.message : 'Unknown error'}` },
             { status: 500 }
         )
     }
