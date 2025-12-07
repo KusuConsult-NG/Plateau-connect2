@@ -10,7 +10,7 @@ Create a `.env` file on your server with these variables:
 
 ```bash
 # Database (REQUIRED)
-DATABASE_URL="postgresql://user:password@host:5432/database"
+DATABASE_URL="postgresql://postgres.wxvzuhglppcptuhzfehg:ChurchFlow2024!@aws-1-eu-west-2.pooler.supabase.com:6543/postgres"
 
 # NextAuth (REQUIRED)
 NEXTAUTH_URL="https://your-domain.com"

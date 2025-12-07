@@ -46,8 +46,39 @@ export async function POST(
             },
         })
 
-        // TODO: Notify rider about driver acceptance
-        // await triggerRiderNotification(ride.riderId, updatedRide)
+        // Notify rider about driver acceptance
+        try {
+            // Fetch complete driver details including profile for vehicle info
+            const driverProfile = await prisma.driverProfile.findUnique({
+                where: { userId: session.user.id }
+            })
+
+            const vehicleModel = driverProfile ? `${driverProfile.vehicleColor} ${driverProfile.vehicleMake} ${driverProfile.vehicleModel}` : 'Vehicle'
+            const licensePlate = driverProfile?.licensePlate || 'N/A'
+
+            /* 
+             * In a real app, you would import this from @/lib/notifications
+             * But since we just created it, we can use it.
+             */
+            const { sendBookingConfirmation } = await import('@/lib/notifications')
+
+            await sendBookingConfirmation(
+                updatedRide.rider.email as string,
+                updatedRide.rider.phone as string,
+                {
+                    riderName: updatedRide.rider.name as string,
+                    driverName: updatedRide.driver?.name as string,
+                    vehicleModel: vehicleModel,
+                    licensePlate: licensePlate,
+                    pickup: updatedRide.pickupLocation,
+                    destination: updatedRide.destination,
+                    fare: updatedRide.estimatedFare
+                }
+            )
+        } catch (notifyError) {
+            console.error('Failed to send notification:', notifyError)
+            // Don't fail the request just because notification failed
+        }
 
         return NextResponse.json({ ride: updatedRide })
     } catch (error) {
