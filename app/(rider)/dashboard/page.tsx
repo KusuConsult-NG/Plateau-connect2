@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { FiMapPin, FiCreditCard, FiClock, FiHome, FiBriefcase, FiShoppingBag, FiArrowRight } from 'react-icons/fi'
 import { VEHICLE_TYPES, TERMINALS, DEPARTURE_TIMES } from '@/lib/constants'
