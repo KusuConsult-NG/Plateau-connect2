@@ -1,0 +1,255 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  DRIVER
+  RIDER
+}
+
+enum RideStatus {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethodType {
+  CARD
+  BANK_TRANSFER
+}
+
+enum DriverStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String
+  phone         String?
+  role          UserRole  @default(RIDER)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  driverProfile DriverProfile?
+  ridesAsRider  Ride[]         @relation("RiderRides")
+  ridesAsDriver Ride[]         @relation("DriverRides")
+  payments      Payment[]
+  paymentMethods PaymentMethod[]
+  savedLocations SavedLocation[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model DriverProfile {
+  id                String        @id @default(cuid())
+  userId            String        @unique
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Personal Details
+  firstName         String
+  lastName          String
+  email             String
+  phone             String
+  address           String
+  profilePicture    String?
+  
+  // Vehicle Information
+  vehicleType       String        // Economy, Standard, Premium, Keke
+  vehicleMake       String
+  vehicleModel      String
+  vehicleYear       Int
+  vehicleColor      String
+  licensePlate      String
+  
+  // Documents
+  licenseNumber     String
+  licenseExpiry     DateTime
+  licenseDocument   String?
+  vehicleRegistration String?
+  insurance         String?
+  
+  // Bank Details
+  bankName          String?
+  accountNumber     String?
+  accountName       String?
+  
+  // Status & Ratings
+  status            DriverStatus  @default(PENDING_VERIFICATION)
+  rating            Float         @default(0)
+  totalTrips        Int           @default(0)
+  acceptanceRate    Float         @default(0)
+  isOnline          Boolean       @default(false)
+  
+  // Location tracking
+  currentLatitude   Float?
+  currentLongitude  Float?
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([isOnline])
+}
+
+model Ride {
+  id                String      @id @default(cuid())
+  rideId            String      @unique @default(cuid())
+  
+  // Rider Information
+  riderId           String
+  rider             User        @relation("RiderRides", fields: [riderId], references: [id])
+  
+  // Driver Information
+  driverId          String?
+  driver            User?       @relation("DriverRides", fields: [driverId], references: [id])
+  
+  // Location Details
+  pickupLocation    String
+  pickupLatitude    Float
+  pickupLongitude   Float
+  destination       String
+  destinationLatitude Float
+  destinationLongitude Float
+  
+  // Ride Details
+  rideType          String      // Economy, Standard, Premium, Keke
+  status            RideStatus  @default(PENDING)
+  estimatedFare     Float
+  actualFare        Float?
+  distance          Float       // in kilometers
+  estimatedDuration Int?        // in minutes
+  
+  // Timestamps
+  requestedAt       DateTime    @default(now())
+  acceptedAt        DateTime?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  cancelledAt       DateTime?
+  
+  // Payment
+  payment           Payment?
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([riderId])
+  @@index([driverId])
+  @@index([status])
+  @@index([requestedAt])
+}
+
+model Payment {
+  id                String          @id @default(cuid())
+  
+  // Relationship
+  rideId            String          @unique
+  ride              Ride            @relation(fields: [rideId], references: [id])
+  userId            String
+  user              User            @relation(fields: [userId], references: [id])
+  
+  // Payment Details
+  amount            Float
+  currency          String          @default("NGN")
+  status            PaymentStatus   @default(PENDING)
+  paymentMethod     PaymentMethodType
+  
+  // Payment Gateway
+  provider          String          // "paystack" or "stripe"
+  transactionRef    String?         @unique
+  gatewayResponse   Json?
+  
+  // Metadata
+  paidAt            DateTime?
+  failedAt          DateTime?
+  failureReason     String?
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([transactionRef])
+}
+
+model PaymentMethod {
+  id                String              @id @default(cuid())
+  userId            String
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type              PaymentMethodType
+  provider          String              // "paystack" or "stripe"
+  
+  // Card Details (encrypted/tokenized)
+  cardLast4         String?
+  cardBrand         String?             // Visa, Mastercard, etc.
+  cardToken         String?             // Payment gateway token
+  
+  // Bank Details
+  bankName          String?
+  accountLast4      String?
+  
+  isDefault         Boolean             @default(false)
+  
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([userId])
+}
+
+model SavedLocation {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name        String   // "Home", "Office", "Gym", etc.
+  address     String
+  latitude    Float
+  longitude   Float
+  icon        String?  // Icon identifier
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model RideType {
+  id          String   @id @default(cuid())
+  name        String   @unique // Economy, Standard, Premium, Keke
+  description String?
+  basePrice   Float    // Base fare
+  pricePerKm  Float    // Price per kilometer
+  icon        String?
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
