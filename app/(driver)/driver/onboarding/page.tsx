@@ -561,6 +561,8 @@ function DocumentsStep({ formData, setFormData }: any) {
                             value={formData.licenseExpiry}
                             onChange={(e) => setFormData({ ...formData, licenseExpiry: e.target.value })}
                             className="input-field"
+                            min={new Date().toISOString().split('T')[0]}
+                            max={new Date(new Date().setFullYear(new Date().getFullYear() + 10)).toISOString().split('T')[0]}
                         />
                     </div>
                 </div>
