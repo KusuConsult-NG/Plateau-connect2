@@ -16,6 +16,7 @@ export async function GET(request: Request) {
 
         const { searchParams } = new URL(request.url)
         const status = searchParams.get('status')
+        const type = searchParams.get('type') // 'available' or 'history'
 
         const where: any = {}
 
@@ -23,11 +24,18 @@ export async function GET(request: Request) {
         if (session.user.role === 'RIDER') {
             where.riderId = session.user.id
         } else if (session.user.role === 'DRIVER') {
-            where.driverId = session.user.id
+            if (type === 'available') {
+                // Show pending rides with no driver
+                where.status = 'PENDING'
+                where.driverId = null
+            } else {
+                // Show driver's own rides
+                where.driverId = session.user.id
+            }
         }
         // Admin can see all rides
 
-        if (status) {
+        if (status && !type) { // Don't override status if type is valid
             where.status = status
         }
 

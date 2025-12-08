@@ -1,8 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
+import useSWR from 'swr'
 import { FiCheckCircle, FiStar, FiClock, FiMapPin } from 'react-icons/fi'
 import { formatCurrency } from '@/lib/utils'
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 const STATS = {
     acceptanceRate: 92,
@@ -11,8 +15,45 @@ const STATS = {
 }
 
 export default function DriverDashboard() {
-    const [hasNewRequest, setHasNewRequest] = useState(true)
-    const [timeLeft, setTimeLeft] = useState(25) // seconds
+    const { data: session } = useSession()
+    // Fetch available rides
+    const { data, error, mutate } = useSWR('/api/rides?type=available', fetcher, {
+        refreshInterval: 5000, // Poll every 5 seconds
+    })
+
+    // State to handle the "current" request being shown
+    const [ignoredRides, setIgnoredRides] = useState<string[]>([])
+    const [accepting, setAccepting] = useState(false)
+
+    // Find the first available ride that hasn't been ignored
+    const newRequest = data?.rides?.find((ride: any) => !ignoredRides.includes(ride.id))
+
+    const handleAccept = async (rideId: string) => {
+        setAccepting(true)
+        try {
+            const res = await fetch(`/api/rides/${rideId}/accept`, {
+                method: 'POST',
+            })
+            const result = await res.json()
+
+            if (!res.ok) {
+                throw new Error(result.error || 'Failed to accept ride')
+            }
+
+            alert('Ride accepted! Redirecting to navigation...')
+            // In a real app, this would redirect to a "Current Trip" page or update the dashboard state
+            // For now, let's just refresh the data to remove it from "Available"
+            mutate()
+        } catch (err) {
+            alert(err instanceof Error ? err.message : 'Error accepting ride')
+        } finally {
+            setAccepting(false)
+        }
+    }
+
+    const handleDecline = (rideId: string) => {
+        setIgnoredRides(prev => [...prev, rideId])
+    }
 
     return (
         <div className="h-screen flex flex-col">
@@ -20,7 +61,7 @@ export default function DriverDashboard() {
             <div className="bg-dark-bg-secondary/50 backdrop-blur-md border-b border-dark-border/50 p-6 z-10">
                 <h1 className="text-3xl font-bold mb-6 gradient-text">Dashboard</h1>
 
-                {/* Stats Grid */}
+                {/* Stats Grid - Still Static for now, can be updated later */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <StatCard
                         icon={<FiCheckCircle className="w-6 h-6 text-white" />}
@@ -58,7 +99,7 @@ export default function DriverDashboard() {
                             </div>
                             <h2 className="text-3xl font-bold text-white mb-2">Live Map</h2>
                             <p className="text-lg text-gray-400 max-w-md mx-auto">
-                                Searching for high demand areas near you...
+                                {newRequest ? 'New request found!' : 'Searching for high demand areas near you...'}
                             </p>
                         </div>
                     </div>
@@ -72,16 +113,16 @@ export default function DriverDashboard() {
 
                 {/* Sidebar - Ride Request (Right - 1 column) */}
                 <div className="bg-dark-bg-secondary/90 backdrop-blur-xl border-l border-dark-border/50 p-6 overflow-y-auto relative z-20 shadow-2xl">
-                    {hasNewRequest ? (
+                    {newRequest ? (
                         <div className="space-y-8 animate-slideIn">
                             {/* Timer with Warning Gradient */}
                             <div className="text-center relative">
                                 <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-primary to-secondary rounded-full mb-4 shadow-lg shadow-primary/30 relative">
                                     <div className="absolute inset-0 rounded-full border-4 border-white/20 animate-ping"></div>
-                                    <span className="text-3xl font-bold text-white relative z-10">00:{timeLeft.toString().padStart(2, '0')}</span>
+                                    <span className="text-3xl font-bold text-white relative z-10">New</span>
                                 </div>
-                                <h2 className="text-2xl font-bold text-white">New Ride Request</h2>
-                                <p className="text-primary font-medium animate-pulse">Expires soon!</p>
+                                <h2 className="text-2xl font-bold text-white">Ride Request</h2>
+                                <p className="text-primary font-medium animate-pulse">Accept now!</p>
                             </div>
 
                             {/* Ride Details Card */}
@@ -92,8 +133,7 @@ export default function DriverDashboard() {
                                         <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-success border-2 border-dark-bg-secondary shadow-lg shadow-success/20"></div>
                                         <div className="space-y-1">
                                             <p className="text-xs font-bold text-dark-text-secondary uppercase tracking-wider">Pickup</p>
-                                            <p className="font-bold text-white text-lg">123 Main St, Jos</p>
-                                            <p className="text-sm text-gray-400">Near Terminus Market</p>
+                                            <p className="font-bold text-white text-lg">{newRequest.pickupLocation}</p>
                                         </div>
                                     </div>
 
@@ -102,8 +142,7 @@ export default function DriverDashboard() {
                                         <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-error border-2 border-dark-bg-secondary shadow-lg shadow-error/20"></div>
                                         <div className="space-y-1">
                                             <p className="text-xs font-bold text-dark-text-secondary uppercase tracking-wider">Destination</p>
-                                            <p className="font-bold text-white text-lg">456 Central Ave, Jos</p>
-                                            <p className="text-sm text-gray-400">Hill Station Hotel</p>
+                                            <p className="font-bold text-white text-lg">{newRequest.destination}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -112,11 +151,11 @@ export default function DriverDashboard() {
                                 <div className="bg-dark-bg-tertiary/50 p-4 grid grid-cols-2 gap-4 border-t border-dark-border/50">
                                     <div className="text-center border-r border-dark-border/50">
                                         <p className="text-xs text-dark-text-secondary mb-1">Est. Fare</p>
-                                        <p className="text-2xl font-bold gradient-text">{formatCurrency(1500)}</p>
+                                        <p className="text-2xl font-bold gradient-text">{formatCurrency(newRequest.estimatedFare)}</p>
                                     </div>
                                     <div className="text-center">
                                         <p className="text-xs text-dark-text-secondary mb-1">Distance</p>
-                                        <p className="text-xl font-bold text-white">5.2 km</p>
+                                        <p className="text-xl font-bold text-white">{(newRequest.distance || 0).toFixed(1)} km</p>
                                     </div>
                                 </div>
                             </div>
@@ -124,13 +163,14 @@ export default function DriverDashboard() {
                             {/* Action Buttons */}
                             <div className="space-y-4">
                                 <button
-                                    onClick={() => setHasNewRequest(false)}
-                                    className="btn-success w-full py-4 text-lg font-bold shadow-lg shadow-success/20 hover:scale-[1.02] transition-transform"
+                                    onClick={() => handleAccept(newRequest.id)}
+                                    disabled={accepting}
+                                    className="btn-success w-full py-4 text-lg font-bold shadow-lg shadow-success/20 hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Accept Ride
+                                    {accepting ? 'Accepting...' : 'Accept Ride'}
                                 </button>
                                 <button
-                                    onClick={() => setHasNewRequest(false)}
+                                    onClick={() => handleDecline(newRequest.id)}
                                     className="w-full py-4 text-error font-semibold hover:bg-error/10 rounded-xl transition-colors border border-transparent hover:border-error/20"
                                 >
                                     Decline Request
