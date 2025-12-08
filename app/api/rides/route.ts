@@ -31,20 +31,24 @@ export async function GET(request: Request) {
             where.status = status
         }
 
+
         const rides = await prisma.ride.findMany({
             where,
             include: {
                 rider: {
-                    select: { id: true, name: true, email: true, phone: true },
+                    select: { id: true, name: true, email: true },
                 },
                 driver: {
-                    select: { id: true, name: true, email: true, phone: true },
+                    select: { id: true, name: true, email: true },
                 },
-                payment: true,
+                payment: {
+                    select: { id: true, status: true, amount: true },
+                },
             },
             orderBy: { createdAt: 'desc' },
             take: 50,
         })
+
 
         return NextResponse.json({ rides })
     } catch (error) {
