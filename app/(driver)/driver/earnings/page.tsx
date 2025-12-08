@@ -101,7 +101,7 @@ export default function EarningsPage() {
             </div>
 
             {/* Main Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-slideIn">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-slideIn">
                 <div className="card-gradient p-6 rounded-2xl text-white relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <FiDollarSign className="w-24 h-24 transform -rotate-12" />
@@ -118,6 +118,18 @@ export default function EarningsPage() {
                     <p className="text-dark-text-secondary font-medium mb-1">Today's Earnings</p>
                     <h2 className="text-3xl font-bold text-white mb-2">{formatCurrency(summary.todayEarnings)}</h2>
                     <p className="text-xs text-success font-semibold">{summary.todayTrips} Trips Completed</p>
+                </div>
+
+                <div className="card-glass p-6 rounded-2xl flex flex-col justify-center">
+                    <p className="text-dark-text-secondary font-medium mb-1">Pending Payout</p>
+                    <h2 className="text-3xl font-bold text-white mb-2">{formatCurrency(summary.totalEarnings)}</h2>
+                    <p className="text-xs text-dark-text-secondary">
+                        Next payout: {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric'
+                        })}
+                    </p>
                 </div>
 
                 <div className="card-glass p-6 rounded-2xl flex flex-col justify-center">
@@ -171,8 +183,8 @@ export default function EarningsPage() {
                                             </span>
                                             <span
                                                 className={`px-2 py-1 text-xs font-semibold rounded ${ride.paymentStatus === 'COMPLETED'
-                                                        ? 'bg-success/20 text-success'
-                                                        : 'bg-warning/20 text-warning'
+                                                    ? 'bg-success/20 text-success'
+                                                    : 'bg-warning/20 text-warning'
                                                     }`}
                                             >
                                                 {ride.paymentStatus}
