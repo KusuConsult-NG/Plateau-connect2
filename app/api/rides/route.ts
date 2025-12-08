@@ -7,8 +7,9 @@ import { calculateDistance } from '@/lib/utils'
 
 // GET - List rides
 export async function GET(request: Request) {
+    let session
     try {
-        const session = await getServerSession(authOptions)
+        session = await getServerSession(authOptions)
         if (!session?.user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
@@ -47,9 +48,22 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ rides })
     } catch (error) {
-        console.error('Error fetching rides:', error)
+        // Enhanced error logging for production debugging
+        console.error('=== RIDES API ERROR ===')
+        console.error('Error type:', error?.constructor?.name)
+        console.error('Error message:', error instanceof Error ? error.message : String(error))
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+        console.error('Session user ID:', session?.user?.id)
+        console.error('Session user role:', session?.user?.role)
+        console.error('========================')
+
+        // Return detailed error in development, generic in production
+        const errorMessage = process.env.NODE_ENV === 'development'
+            ? `Failed to fetch rides: ${error instanceof Error ? error.message : String(error)}`
+            : 'Failed to fetch rides'
+
         return NextResponse.json(
-            { error: 'Failed to fetch rides' },
+            { error: errorMessage },
             { status: 500 }
         )
     }
