@@ -147,7 +147,6 @@ model Ride {
   estimatedDuration Int?        // in minutes
   
   // Timestamps
-  requestedAt       DateTime    @default(now())
   acceptedAt        DateTime?
   startedAt         DateTime?
   completedAt       DateTime?
@@ -162,7 +161,6 @@ model Ride {
   @@index([riderId])
   @@index([driverId])
   @@index([status])
-  @@index([requestedAt])
 }
 
 model Payment {
