@@ -227,7 +227,7 @@ export default function RiderDashboard() {
                                                 {type.description}
                                             </p>
                                             <p className="font-bold text-sm gradient-text">
-                                                {formatCurrency(type.pricePerKm)}/KM
+                                                ₦50/KM (&lt;35km) • ₦75/KM (≥35km)
                                             </p>
                                         </button>
                                     ))}
@@ -268,9 +268,14 @@ export default function RiderDashboard() {
                                     <div className="pt-3 border-t border-white/10">
                                         <p className="text-xs text-white/70 mb-2">Fare Calculation:</p>
                                         <div className="flex justify-between text-sm">
-                                            <span>{tripDistance.toFixed(1)} KM × {formatCurrency(VEHICLE_TYPES[selectedRideType as keyof typeof VEHICLE_TYPES].pricePerKm)}/KM:</span>
+                                            <span>{tripDistance.toFixed(1)} KM × {tripDistance < 35 ? '₦50/KM' : '₦75/KM'}:</span>
                                             <span className="font-bold">{formatCurrency(estimatedFare)}</span>
                                         </div>
+                                        <p className="text-xs text-white/60 mt-2">
+                                            {tripDistance < 35
+                                                ? '* Under 35 KM rate applies'
+                                                : '* 35 KM and above rate applies'}
+                                        </p>
                                     </div>
                                 </div>
                             )}

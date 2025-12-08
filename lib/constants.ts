@@ -100,6 +100,17 @@ export const USER_ROLES = {
 } as const
 
 export function calculateFare(vehicleType: keyof typeof VEHICLE_TYPES, distance: number): number {
-    const type = VEHICLE_TYPES[vehicleType]
-    return type.pricePerKm * distance
+    // Tiered pricing based on distance
+    // Under 35 KM: ₦50/KM
+    // 35 KM and above: ₦75/KM
+    const rateUnder35 = 50
+    const rate35AndAbove = 75
+    const threshold = 35
+
+    if (distance < threshold) {
+        return distance * rateUnder35
+    } else {
+        return distance * rate35AndAbove
+    }
 }
+
