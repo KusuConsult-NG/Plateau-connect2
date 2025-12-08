@@ -22,11 +22,20 @@ export default function PaymentButton({
     className = 'btn-success w-full py-3',
 }: PaymentButtonProps) {
     const handlePayment = async () => {
+        // Get the public key - use window.ENV if available (server-rendered), otherwise process.env
+        const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY
+
+        if (!publicKey) {
+            alert('Payment configuration error: Paystack public key is missing. Please contact support.')
+            console.error('NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY is not set')
+            return
+        }
+
         const PaystackPop = (await import('@paystack/inline-js')).default
         const paystack = new PaystackPop()
 
         paystack.newTransaction({
-            key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+            key: publicKey,
             email,
             amount: amount * 100, // Convert to kobo
             metadata,
