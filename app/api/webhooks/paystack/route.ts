@@ -45,8 +45,13 @@ export async function POST(request: Request) {
                 await handleChargeSuccess(event.data)
                 break
 
+            case 'dedicatedaccount.assign.success':
+                console.log('Virtual account assigned to customer')
+                break
+
             case 'transfer.success':
-                await handleTransferSuccess(event.data)
+                // Virtual account credit
+                await handleVirtualAccountCredit(event.data)
                 break
 
             case 'transfer.failed':
@@ -131,5 +136,83 @@ async function handleTransferFailed(data: any) {
         // TODO: Notify admin or retry
     } catch (error) {
         console.error('Error handling transfer failed:', error)
+    }
+}
+
+async function handleVirtualAccountCredit(data: any) {
+    try {
+        // Find virtual account by customer code or account details
+        const virtualAccount = await prisma.virtualAccount.findFirst({
+            where: {
+                OR: [
+                    { paystackCustomerCode: data.customer?.customer_code },
+                    { accountNumber: data.account_number },
+                ],
+            },
+            include: {
+                user: {
+                    include: {
+                        wallet: true,
+                    },
+                },
+            },
+        })
+
+        if (!virtualAccount) {
+            console.error('Virtual account not found for transfer')
+            return
+        }
+
+        // Get or create wallet
+        let wallet = virtualAccount.user.wallet
+
+        if (!wallet) {
+            wallet = await prisma.wallet.create({
+                data: {
+                    userId: virtualAccount.userId,
+                    balance: 0,
+                },
+            })
+        }
+
+        const amount = data.amount / 100 // Convert from kobo to naira
+        const reference = data.reference || data.transaction_reference
+
+        // Check if already processed
+        const existingTransaction = await prisma.walletTransaction.findUnique({
+            where: { reference },
+        })
+
+        if (existingTransaction) {
+            console.log('Transaction already processed:', reference)
+            return
+        }
+
+        // Update wallet balance and create transaction atomically
+        await prisma.$transaction([
+            prisma.wallet.update({
+                where: { id: wallet.id },
+                data: {
+                    balance: {
+                        increment: amount,
+                    },
+                },
+            }),
+            prisma.walletTransaction.create({
+                data: {
+                    walletId: wallet.id,
+                    type: 'DEPOSIT',
+                    amount,
+                    description: `Bank transfer to ${virtualAccount.accountNumber}`,
+                    reference,
+                    status: 'COMPLETED',
+                },
+            }),
+        ])
+
+        console.log(`✅ Wallet auto-credited: ₦${amount} for user ${virtualAccount.userId}`)
+    } catch (error) {
+        console.error('Error handling virtual account credit:', error)
+        throw error
     }
 }

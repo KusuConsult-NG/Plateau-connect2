@@ -75,6 +75,7 @@ model User {
   paymentMethods PaymentMethod[]
   savedLocations SavedLocation[]
   wallet        Wallet?
+  virtualAccount VirtualAccount?
 
   @@index([email])
   @@index([role])
@@ -290,4 +291,20 @@ model WalletTransaction {
   
   @@index([walletId])
   @@index([createdAt])
+}
+
+model VirtualAccount {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountNumber         String   @unique
+  accountName           String
+  bankName              String
+  paystackCustomerCode  String   @unique
+  paystackAccountId     String?  @unique
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  
+  @@index([userId])
+  @@index([accountNumber])
 }
