@@ -4,14 +4,22 @@ import { useSession } from 'next-auth/react'
 import { useState } from 'react'
 import useSWR from 'swr'
 import PaymentButton from '@/components/PaymentButton'
-import { FiCreditCard, FiPlus, FiDollarSign, FiActivity, FiMapPin, FiTrendingUp, FiTrendingDown } from 'react-icons/fi'
+import { FiCreditCard, FiPlus, FiDollarSign, FiActivity, FiMapPin, FiTrendingUp, FiTrendingDown, FiCopy } from 'react-icons/fi'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
+// Bank account details for transfers
+const BANK_ACCOUNT = {
+    bankName: 'First Bank of Nigeria',
+    accountNumber: '1234567890',
+    accountName: 'Plateau Connect Ltd',
+}
+
 export default function WalletPage() {
     const { data: session } = useSession()
     const [depositAmount, setDepositAmount] = useState(5000)
+    const [fundingMethod, setFundingMethod] = useState<'card' | 'transfer'>('card')
     const { data: walletData, error, mutate } = useSWR('/api/wallet', fetcher, {
         refreshInterval: 10000,
     })
@@ -68,6 +76,11 @@ export default function WalletPage() {
         }
     }
 
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text)
+        alert('Copied to clipboard!')
+    }
+
     return (
         <div className="max-w-4xl mx-auto px-4 py-8">
             <div className="mb-8 animate-slideUp">
@@ -85,29 +98,82 @@ export default function WalletPage() {
                         <p className="text-blue-100 font-medium mb-1">Wallet Balance</p>
                         {loading ? (
                             <div className="h-10 w-32 bg-white/20 rounded animate-pulse mb-6"></div>
+                        ) : error ? (
+                            <div className="mb-6">
+                                <h2 className="text-4xl font-bold text-error mb-2">Error</h2>
+                                <p className="text-xs text-white/70">Database tables not created. Run migration in Supabase.</p>
+                            </div>
                         ) : (
                             <h2 className="text-4xl font-bold mb-6">{formatCurrency(walletData?.balance || 0)}</h2>
                         )}
-                        <div className="flex space-x-3">
-                            <PaymentButton
-                                email={session?.user?.email || 'user@example.com'}
-                                amount={depositAmount}
-                                text="Add Funds"
-                                onSuccess={handleDepositSuccess}
-                                className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center space-x-2"
-                            />
-                            <select
-                                value={depositAmount}
-                                onChange={(e) => setDepositAmount(Number(e.target.value))}
-                                className="bg-white/20 backdrop-blur-md px-3 py-2 rounded-lg text-sm font-semibold"
+
+                        {/* Funding Method Tabs */}
+                        <div className="flex space-x-2 mb-4">
+                            <button
+                                onClick={() => setFundingMethod('card')}
+                                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${fundingMethod === 'card'
+                                    ? 'bg-white/30 text-white'
+                                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                                    }`}
                             >
-                                <option value={1000}>₦1,000</option>
-                                <option value={2000}>₦2,000</option>
-                                <option value={5000}>₦5,000</option>
-                                <option value={10000}>₦10,000</option>
-                                <option value={20000}>₦20,000</option>
-                            </select>
+                                💳 Card/Paystack
+                            </button>
+                            <button
+                                onClick={() => setFundingMethod('transfer')}
+                                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${fundingMethod === 'transfer'
+                                    ? 'bg-white/30 text-white'
+                                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                                    }`}
+                            >
+                                🏦 Bank Transfer
+                            </button>
                         </div>
+
+
+                        {fundingMethod === 'card' ? (
+                            <div className="flex space-x-3">
+                                <PaymentButton
+                                    email={session?.user?.email || 'user@example.com'}
+                                    amount={depositAmount}
+                                    text="Add Funds"
+                                    onSuccess={handleDepositSuccess}
+                                    className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center space-x-2"
+                                />
+                                <select
+                                    value={depositAmount}
+                                    onChange={(e) => setDepositAmount(Number(e.target.value))}
+                                    className="bg-white/20 backdrop-blur-md px-3 py-2 rounded-lg text-sm font-semibold"
+                                >
+                                    <option value={1000}>₦1,000</option>
+                                    <option value={2000}>₦2,000</option>
+                                    <option value={5000}>₦5,000</option>
+                                    <option value={10000}>₦10,000</option>
+                                    <option value={20000}>₦20,000</option>
+                                </select>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                <div className="bg-white/10 rounded-lg p-4 space-y-2">
+                                    <p className="text-xs text-white/70">Transfer to:</p>
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <p className="font-bold text-white">{BANK_ACCOUNT.bankName}</p>
+                                            <p className="text-sm text-white/90">{BANK_ACCOUNT.accountNumber}</p>
+                                            <p className="text-xs text-white/70">{BANK_ACCOUNT.accountName}</p>
+                                        </div>
+                                        <button
+                                            onClick={() => copyToClipboard(BANK_ACCOUNT.accountNumber)}
+                                            className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                                        >
+                                            <FiCopy className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="bg-warning/10 border border-warning/30 rounded-lg p-3">
+                                    <p className="text-xs text-warning">⚠️ After transfer, contact support with your transaction reference to credit your wallet.</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -166,6 +232,6 @@ export default function WalletPage() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     )
 }
