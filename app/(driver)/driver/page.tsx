@@ -18,6 +18,10 @@ const STATS = {
 export default function DriverDashboard() {
     const { data: session } = useSession()
 
+    // Fetch driver profile for KYC status
+    const { data: profileData } = useSWR('/api/driver/profile', fetcher)
+    const driverProfile = profileData?.profile
+
     // 1. Fetch ALL active rides (passengers) for this driver
     const { data: activeData, mutate: mutateActive } = useSWR('/api/rides?type=active', fetcher)
     const activePassengers = activeData?.rides || []
@@ -70,8 +74,52 @@ export default function DriverDashboard() {
         return groups
     }, {})
 
+    // Get KYC status display
+    const kycStatus = driverProfile?.status || 'PENDING_VERIFICATION'
+    const kycStatusConfig = {
+        PENDING_VERIFICATION: {
+            color: 'bg-warning/20 text-warning border-warning/30',
+            icon: '⏳',
+            text: 'KYC Documents Under Review',
+            description: 'Your documents are being verified. This usually takes 24-48 hours.'
+        },
+        APPROVED: {
+            color: 'bg-success/20 text-success border-success/30',
+            icon: '✅',
+            text: 'Verified Driver',
+            description: 'Your account is fully verified and active.'
+        },
+        REJECTED: {
+            color: 'bg-error/20 text-error border-error/30',
+            icon: '❌',
+            text: 'Verification Failed',
+            description: 'Please contact support to resolve verification issues.'
+        },
+        SUSPENDED: {
+            color: 'bg-error/20 text-error border-error/30',
+            icon: '⛔',
+            text: 'Account Suspended',
+            description: 'Your account has been suspended. Contact support for assistance.'
+        }
+    }
+
+    const statusInfo = kycStatusConfig[kycStatus as keyof typeof kycStatusConfig] || kycStatusConfig.PENDING_VERIFICATION
+
     return (
         <div className="h-screen flex flex-col">
+            {/* KYC Status Banner */}
+            {kycStatus !== 'APPROVED' && (
+                <div className={`${statusInfo.color} border-b px-6 py-3`}>
+                    <div className="flex items-center space-x-3">
+                        <span className="text-2xl">{statusInfo.icon}</span>
+                        <div>
+                            <p className="font-bold">{statusInfo.text}</p>
+                            <p className="text-xs opacity-90">{statusInfo.description}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="bg-dark-bg-secondary/50 backdrop-blur-md border-b border-dark-border/50 p-6 z-10">
                 <div className="flex justify-between items-start mb-6">

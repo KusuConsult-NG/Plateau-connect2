@@ -117,6 +117,24 @@ export default function SettingsPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6 animate-slideIn">
+                {/* Profile Picture - Read Only */}
+                {formData.firstName && (
+                    <div className="card-glass p-6">
+                        <div className="flex items-center space-x-4">
+                            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-2xl font-bold">
+                                {formData.firstName[0]}{formData.lastName[0]}
+                            </div>
+                            <div>
+                                <p className="font-bold text-white">{formData.firstName} {formData.lastName}</p>
+                                <p className="text-sm text-dark-text-secondary">Profile Picture</p>
+                                <p className="text-xs text-warning mt-1">
+                                    ℹ️ Profile photo and KYC documents cannot be updated for security reasons
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Personal Information */}
                 <div className="card-glass p-0 overflow-hidden">
                     <div className="p-6 border-b border-dark-border/50 flex items-center space-x-3">
