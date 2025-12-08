@@ -101,5 +101,5 @@ export const USER_ROLES = {
 
 export function calculateFare(vehicleType: keyof typeof VEHICLE_TYPES, distance: number): number {
     const type = VEHICLE_TYPES[vehicleType]
-    return type.basePrice + (type.pricePerKm * distance)
+    return type.pricePerKm * distance
 }

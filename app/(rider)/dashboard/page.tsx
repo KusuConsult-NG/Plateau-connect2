@@ -227,7 +227,7 @@ export default function RiderDashboard() {
                                                 {type.description}
                                             </p>
                                             <p className="font-bold text-sm gradient-text">
-                                                {formatCurrency(type.basePrice)} <span className="text-xs font-normal opacity-70">est.</span>
+                                                {formatCurrency(type.pricePerKm)}/KM
                                             </p>
                                         </button>
                                     ))}
@@ -266,14 +266,10 @@ export default function RiderDashboard() {
                                     </div>
 
                                     <div className="pt-3 border-t border-white/10">
-                                        <p className="text-xs text-white/70 mb-2">Fare Breakdown:</p>
+                                        <p className="text-xs text-white/70 mb-2">Fare Calculation:</p>
                                         <div className="flex justify-between text-sm">
-                                            <span>Base Price ({VEHICLE_TYPES[selectedRideType as keyof typeof VEHICLE_TYPES].name}):</span>
-                                            <span>{formatCurrency(VEHICLE_TYPES[selectedRideType as keyof typeof VEHICLE_TYPES].basePrice)}</span>
-                                        </div>
-                                        <div className="flex justify-between text-sm mt-1">
-                                            <span>Distance ({tripDistance.toFixed(1)} KM × {formatCurrency(VEHICLE_TYPES[selectedRideType as keyof typeof VEHICLE_TYPES].pricePerKm)}):</span>
-                                            <span>{formatCurrency(VEHICLE_TYPES[selectedRideType as keyof typeof VEHICLE_TYPES].pricePerKm * tripDistance)}</span>
+                                            <span>{tripDistance.toFixed(1)} KM × {formatCurrency(VEHICLE_TYPES[selectedRideType as keyof typeof VEHICLE_TYPES].pricePerKm)}/KM:</span>
+                                            <span className="font-bold">{formatCurrency(estimatedFare)}</span>
                                         </div>
                                     </div>
                                 </div>
