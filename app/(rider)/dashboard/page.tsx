@@ -53,7 +53,7 @@ export default function RiderDashboard() {
 
             const data = await response.json()
             alert('Ride booked successfully!')
-            router.push('/trips')
+            router.push('/dashboard/trips')
         } catch (error) {
             console.error('Booking error:', error)
             alert(error instanceof Error ? error.message : 'Failed to book ride')
@@ -249,7 +249,10 @@ export default function RiderDashboard() {
                     <div className="card-glass animate-slideIn" style={{ animationDelay: '0.2s' }}>
                         <div className="flex items-center justify-between mb-5">
                             <h3 className="text-lg font-bold">Recent Trips</h3>
-                            <button className="text-sm gradient-text font-semibold hover:opacity-80 transition-opacity">
+                            <button
+                                onClick={() => router.push('/dashboard/trips')}
+                                className="text-sm gradient-text font-semibold hover:opacity-80 transition-opacity"
+                            >
                                 View All
                             </button>
                         </div>

@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 
 const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: FiGrid },
-    { name: 'Ride History', href: '/trips', icon: FiClock },
+    { name: 'Ride History', href: '/dashboard/trips', icon: FiClock },
     { name: 'Wallet', href: '/wallet', icon: FiCreditCard },
     { name: 'Saved Places', href: '/saved-places', icon: FiMapPin },
     { name: 'Support', href: '/support', icon: FiHelpCircle },
