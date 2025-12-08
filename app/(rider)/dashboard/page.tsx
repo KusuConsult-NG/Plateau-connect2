@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { FiMapPin, FiCreditCard, FiClock, FiHome, FiBriefcase, FiShoppingBag, FiArrowRight } from 'react-icons/fi'
-import { VEHICLE_TYPES, TERMINALS, DEPARTURE_TIMES } from '@/lib/constants'
-import { formatCurrency } from '@/lib/utils'
+import { VEHICLE_TYPES, TERMINALS, DEPARTURE_TIMES, calculateFare } from '@/lib/constants'
+import { formatCurrency, calculateDistance, formatDuration } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,6 +17,44 @@ export default function RiderDashboard() {
     const [departureTime, setDepartureTime] = useState('')
     const [selectedRideType, setSelectedRideType] = useState('FOUR_SEATER')
     const [loading, setLoading] = useState(false)
+
+    // Trip calculation states
+    const [tripDistance, setTripDistance] = useState<number>(0)
+    const [estimatedFare, setEstimatedFare] = useState<number>(0)
+    const [estimatedDuration, setEstimatedDuration] = useState<number>(0)
+
+    // Calculate trip details when terminals or vehicle type change
+    useEffect(() => {
+        if (!pickupLocationId || !destinationId) {
+            setTripDistance(0)
+            setEstimatedFare(0)
+            setEstimatedDuration(0)
+            return
+        }
+
+        const pickup = TERMINALS.find(t => t.id === pickupLocationId)
+        const destination = TERMINALS.find(t => t.id === destinationId)
+
+        if (!pickup || !destination) return
+
+        // Calculate distance
+        const distance = calculateDistance(
+            pickup.lat,
+            pickup.lng,
+            destination.lat,
+            destination.lng
+        )
+
+        // Calculate fare
+        const fare = calculateFare(selectedRideType as keyof typeof VEHICLE_TYPES, distance)
+
+        // Calculate duration (distance / 100 KM/HR * 60 minutes)
+        const duration = (distance / 100) * 60
+
+        setTripDistance(distance)
+        setEstimatedFare(fare)
+        setEstimatedDuration(duration)
+    }, [pickupLocationId, destinationId, selectedRideType])
 
     const handleBookRide = async () => {
         if (!pickupLocationId || !destinationId || !departureTime) {
@@ -42,7 +80,7 @@ export default function RiderDashboard() {
                     destinationLatitude: destinationTerminal.lat,
                     destinationLongitude: destinationTerminal.lng,
                     rideType: selectedRideType,
-                    metadata: { departureTime } // Pass departure time in metadata/notes if schema supports it or just as part of the ride details
+                    metadata: { departureTime }
                 }),
             })
 
@@ -195,6 +233,51 @@ export default function RiderDashboard() {
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Trip Summary Preview */}
+                            {pickupLocationId && destinationId && tripDistance > 0 && (
+                                <div className="card-gradient p-5 rounded-2xl space-y-3 animate-slideIn">
+                                    <h3 className="font-bold text-lg mb-3">Trip Summary</h3>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div className="flex items-center space-x-3 bg-white/10 rounded-xl p-3">
+                                            <FiMapPin className="w-5 h-5 text-success" />
+                                            <div>
+                                                <p className="text-xs text-white/70">Distance</p>
+                                                <p className="font-bold">{tripDistance.toFixed(1)} KM</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center space-x-3 bg-white/10 rounded-xl p-3">
+                                            <FiClock className="w-5 h-5 text-primary" />
+                                            <div>
+                                                <p className="text-xs text-white/70">Est. Duration</p>
+                                                <p className="font-bold">{formatDuration(estimatedDuration)}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center space-x-3 bg-white/10 rounded-xl p-3">
+                                            <FiCreditCard className="w-5 h-5 text-warning" />
+                                            <div>
+                                                <p className="text-xs text-white/70">Total Fare</p>
+                                                <p className="font-bold gradient-text">{formatCurrency(estimatedFare)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-3 border-t border-white/10">
+                                        <p className="text-xs text-white/70 mb-2">Fare Breakdown:</p>
+                                        <div className="flex justify-between text-sm">
+                                            <span>Base Price ({VEHICLE_TYPES[selectedRideType as keyof typeof VEHICLE_TYPES].name}):</span>
+                                            <span>{formatCurrency(VEHICLE_TYPES[selectedRideType as keyof typeof VEHICLE_TYPES].basePrice)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm mt-1">
+                                            <span>Distance ({tripDistance.toFixed(1)} KM × {formatCurrency(VEHICLE_TYPES[selectedRideType as keyof typeof VEHICLE_TYPES].pricePerKm)}):</span>
+                                            <span>{formatCurrency(VEHICLE_TYPES[selectedRideType as keyof typeof VEHICLE_TYPES].pricePerKm * tripDistance)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Request Ride Button with Gradient */}
                             <button

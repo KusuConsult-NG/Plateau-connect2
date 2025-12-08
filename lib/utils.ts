@@ -81,3 +81,13 @@ export function calculateDistance(
 function toRad(degrees: number): number {
     return degrees * (Math.PI / 180)
 }
+
+export function formatDuration(minutes: number): string {
+    const hours = Math.floor(minutes / 60)
+    const mins = Math.round(minutes % 60)
+
+    if (hours === 0) return `${mins} min`
+    if (mins === 0) return `${hours} hr`
+    return `${hours} hr ${mins} min`
+}
+

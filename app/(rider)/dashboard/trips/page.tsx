@@ -2,8 +2,9 @@
 
 import { useSession } from 'next-auth/react'
 import useSWR from 'swr'
+import { useState } from 'react'
 import PaymentButton from '@/components/PaymentButton'
-import { FiMapPin, FiClock, FiCalendar, FiCreditCard } from 'react-icons/fi'
+import { FiMapPin, FiClock, FiCalendar, FiCreditCard, FiX } from 'react-icons/fi'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 
 // Fetcher for SWR
@@ -11,6 +12,8 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function TripsPage() {
     const { data: session } = useSession()
+    const [cancellingId, setCancellingId] = useState<string | null>(null)
+
     // Fetch rides for the current user
     const { data, error, mutate } = useSWR('/api/rides?role=RIDER', fetcher, {
         refreshInterval: 5000
@@ -40,6 +43,33 @@ export default function TripsPage() {
         } catch (e) {
             console.error('Verification error:', e)
             alert('Error verifying payment.')
+        }
+    }
+
+    const handleCancelRide = async (rideId: string) => {
+        if (!confirm('Are you sure you want to cancel this trip? This action cannot be undone.')) {
+            return
+        }
+
+        setCancellingId(rideId)
+        try {
+            const response = await fetch(`/api/rides/${rideId}/cancel`, {
+                method: 'POST',
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to cancel ride')
+            }
+
+            alert('Trip cancelled successfully')
+            mutate() // Refresh the list
+        } catch (error) {
+            console.error('Cancellation error:', error)
+            alert(error instanceof Error ? error.message : 'Failed to cancel trip')
+        } finally {
+            setCancellingId(null)
         }
     }
 
@@ -123,14 +153,32 @@ export default function TripsPage() {
                                         ) : isCancelled ? (
                                             <span className="text-dark-text-secondary">Cancelled</span>
                                         ) : (
-                                            <PaymentButton
-                                                email={session?.user?.email || ride.rider.email}
-                                                amount={ride.estimatedFare}
-                                                text="Pay Now"
-                                                metadata={{ rideId: ride.id }}
-                                                onSuccess={(ref) => handlePaymentSuccess(ref, ride.id, ride.estimatedFare)}
-                                                className="btn-primary w-full py-2 px-6 text-sm font-bold shadow-lg shadow-primary/20"
-                                            />
+                                            <div className="flex flex-col space-y-2 w-full">
+                                                <PaymentButton
+                                                    email={session?.user?.email || ride.rider.email}
+                                                    amount={ride.estimatedFare}
+                                                    text="Pay Now"
+                                                    metadata={{ rideId: ride.id }}
+                                                    onSuccess={(ref) => handlePaymentSuccess(ref, ride.id, ride.estimatedFare)}
+                                                    className="btn-primary w-full py-2 px-6 text-sm font-bold shadow-lg shadow-primary/20"
+                                                />
+                                                {(ride.status === 'PENDING' || ride.status === 'ACCEPTED') && (
+                                                    <button
+                                                        onClick={() => handleCancelRide(ride.id)}
+                                                        disabled={cancellingId === ride.id}
+                                                        className="btn-outline border-error/30 text-error hover:bg-error/10 w-full py-2 px-6 text-sm font-bold flex items-center justify-center space-x-2 disabled:opacity-50"
+                                                    >
+                                                        {cancellingId === ride.id ? (
+                                                            <span>Cancelling...</span>
+                                                        ) : (
+                                                            <>
+                                                                <FiX className="w-4 h-4" />
+                                                                <span>Cancel Trip</span>
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
                                 </div>
