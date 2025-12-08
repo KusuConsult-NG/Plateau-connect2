@@ -45,7 +45,7 @@ export default function PaymentButton({
 
     return (
         <button onClick={handlePayment} className={className}>
-            {text} (₦{amount.toLocaleString()})
+            {text} (₦{(amount || 0).toLocaleString()})
         </button>
     )
 }

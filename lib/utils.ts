@@ -2,7 +2,8 @@ export function cn(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(' ')
 }
 
-export function formatCurrency(amount: number, currency: string = 'NGN'): string {
+export function formatCurrency(amount: number | undefined | null, currency: string = 'NGN'): string {
+    if (amount === undefined || amount === null) return '₦0';
     if (currency === 'NGN') {
         return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
     }
@@ -12,8 +13,10 @@ export function formatCurrency(amount: number, currency: string = 'NGN'): string
     }).format(amount)
 }
 
-export function formatDate(date: Date | string): string {
+export function formatDate(date: Date | string | undefined | null): string {
+    if (!date) return '';
     const d = typeof date === 'string' ? new Date(date) : date
+    if (isNaN(d.getTime())) return '';
     return d.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
@@ -21,8 +24,10 @@ export function formatDate(date: Date | string): string {
     })
 }
 
-export function formatDateTime(date: Date | string): string {
+export function formatDateTime(date: Date | string | undefined | null): string {
+    if (!date) return '';
     const d = typeof date === 'string' ? new Date(date) : date
+    if (isNaN(d.getTime())) return '';
     return d.toLocaleString('en-US', {
         year: 'numeric',
         month: 'short',

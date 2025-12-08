@@ -56,11 +56,11 @@ export default function TripsPage() {
                         <div key={i} className="h-32 bg-dark-bg-tertiary/50 rounded-2xl animate-pulse"></div>
                     ))}
                 </div>
-            ) : error ? (
+            ) : error || data?.error ? (
                 <div className="text-error p-4 bg-error/10 rounded-xl">
-                    Failed to load trips. Please try again.
+                    {data?.error || 'Failed to load trips. Please try again.'}
                 </div>
-            ) : data?.rides?.length === 0 ? (
+            ) : !data?.rides || data.rides.length === 0 ? (
                 <div className="text-center py-10 text-dark-text-secondary">
                     No trips found. Book your first ride!
                 </div>
@@ -79,8 +79,8 @@ export default function TripsPage() {
                                             <FiCalendar />
                                             <span>{formatDateTime(ride.createdAt)}</span>
                                             <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${ride.status === 'COMPLETED' ? 'bg-success/10 text-success' :
-                                                    ride.status === 'CANCELLED' ? 'bg-error/10 text-error' :
-                                                        'bg-primary/10 text-primary'
+                                                ride.status === 'CANCELLED' ? 'bg-error/10 text-error' :
+                                                    'bg-primary/10 text-primary'
                                                 }`}>
                                                 {ride.status}
                                             </span>
