@@ -63,24 +63,24 @@ enum DriverStatus {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String
-  password      String
-  phone         String?
-  role          UserRole  @default(RIDER)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  phone     String?
+  role      UserRole @default(RIDER)
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  driverProfile DriverProfile?
-  ridesAsRider  Ride[]         @relation("RiderRides")
-  ridesAsDriver Ride[]         @relation("DriverRides")
-  payments      Payment[]
+  driverProfile  DriverProfile?
+  ridesAsRider   Ride[]          @relation("RiderRides")
+  ridesAsDriver  Ride[]          @relation("DriverRides")
+  payments       Payment[]
   paymentMethods PaymentMethod[]
   savedLocations SavedLocation[]
-  wallet        Wallet?
+  wallet         Wallet?
   virtualAccount VirtualAccount?
 
   @@index([email])
@@ -88,51 +88,63 @@ model User {
 }
 
 model DriverProfile {
-  id                String        @id @default(cuid())
-  userId            String        @unique
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Personal Details
-  firstName         String
-  lastName          String
-  email             String
-  phone             String
-  address           String
-  profilePicture    String?
-  
+  firstName      String
+  lastName       String
+  email          String
+  phone          String
+  address        String
+  profilePicture String // Made mandatory for KYC
+
   // Vehicle Information
-  vehicleType       String        // Economy, Standard, Premium, Keke
-  vehicleMake       String
-  vehicleModel      String
-  vehicleYear       Int
-  vehicleColor      String
-  licensePlate      String
-  
-  // Documents
+  vehicleType  String // Economy, Standard, Premium, Keke
+  vehicleMake  String
+  vehicleModel String
+  vehicleYear  Int
+  vehicleColor String
+  licensePlate String
+
+  // Documents - Driver's License
   licenseNumber     String
   licenseExpiry     DateTime
-  licenseDocument   String?
-  vehicleRegistration String?
-  insurance         String?
-  
+  licenseFrontImage String // Front of driver's license (mandatory)
+  licenseBackImage  String // Back of driver's license (mandatory)
+
+  // Documents - Vehicle
+  vehicleRegistration String // Vehicle papers (mandatory)
+  insurance           String // Insurance certificate (mandatory)
+
+  // KYC Documents - National ID
+  nationalIdType     String // NIN, Voter's Card, International Passport, etc.
+  nationalIdNumber   String // ID number for verification
+  nationalIdDocument String // Upload of National ID (mandatory)
+
+  // KYC Documents - Additional
+  proofOfAddress String? // Utility bill or bank statement (optional)
+  bvn            String? // Bank Verification Number (optional but recommended)
+
   // Bank Details
-  bankName          String?
-  accountNumber     String?
-  accountName       String?
-  
+  bankName      String?
+  accountNumber String?
+  accountName   String?
+
   // Status & Ratings
-  status            DriverStatus  @default(PENDING_VERIFICATION)
-  rating            Float         @default(0)
-  totalTrips        Int           @default(0)
-  acceptanceRate    Float         @default(0)
-  isOnline          Boolean       @default(false)
-  
+  status         DriverStatus @default(PENDING_VERIFICATION)
+  rating         Float        @default(0)
+  totalTrips     Int          @default(0)
+  acceptanceRate Float        @default(0)
+  isOnline       Boolean      @default(false)
+
   // Location tracking
-  currentLatitude   Float?
-  currentLongitude  Float?
-  
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  currentLatitude  Float?
+  currentLongitude Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([status])
@@ -140,44 +152,44 @@ model DriverProfile {
 }
 
 model Ride {
-  id                String      @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Rider Information
-  riderId           String
-  rider             User        @relation("RiderRides", fields: [riderId], references: [id])
-  
+  riderId String
+  rider   User   @relation("RiderRides", fields: [riderId], references: [id])
+
   // Driver Information
-  driverId          String?
-  driver            User?       @relation("DriverRides", fields: [driverId], references: [id])
-  
+  driverId String?
+  driver   User?   @relation("DriverRides", fields: [driverId], references: [id])
+
   // Location Details
-  pickupLocation    String
-  pickupLatitude    Float
-  pickupLongitude   Float
-  destination       String
-  destinationLatitude Float
+  pickupLocation       String
+  pickupLatitude       Float
+  pickupLongitude      Float
+  destination          String
+  destinationLatitude  Float
   destinationLongitude Float
-  
+
   // Ride Details
-  rideType          String      // Economy, Standard, Premium, Keke
-  status            RideStatus  @default(PENDING)
+  rideType          String // Economy, Standard, Premium, Keke
+  status            RideStatus @default(PENDING)
   estimatedFare     Float
   actualFare        Float?
-  distance          Float       // in kilometers
-  estimatedDuration Int?        // in minutes
-  departureTime     String?     // e.g., "08:00 AM" (Scheduled departure)
-  
+  distance          Float // in kilometers
+  estimatedDuration Int? // in minutes
+  departureTime     String? // e.g., "08:00 AM" (Scheduled departure)
+
   // Timestamps
-  acceptedAt        DateTime?
-  startedAt         DateTime?
-  completedAt       DateTime?
-  cancelledAt       DateTime?
-  
+  acceptedAt  DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  cancelledAt DateTime?
+
   // Payment
-  payment           Payment?
-  
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  payment Payment?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([riderId])
   @@index([driverId])
@@ -185,34 +197,34 @@ model Ride {
 }
 
 model Payment {
-  id                String          @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Relationship
-  rideId            String?         @unique
-  ride              Ride?           @relation(fields: [rideId], references: [id])
-  userId            String
-  user              User            @relation(fields: [userId], references: [id])
-  
+  rideId String? @unique
+  ride   Ride?   @relation(fields: [rideId], references: [id])
+  userId String
+  user   User    @relation(fields: [userId], references: [id])
+
   // Payment Details
   amount            Float
-  currency          String          @default("NGN")
-  status            PaymentStatus   @default(PENDING)
+  currency          String            @default("NGN")
+  status            PaymentStatus     @default(PENDING)
   paymentMethod     PaymentMethodType
   ridePaymentMethod RidePaymentMethod @default(CARD)
-  
+
   // Payment Gateway
-  provider          String          // "paystack" or "stripe"
-  transactionRef    String?         @unique
-  bankReference     String?         // For bank transfer tracking (e.g., RIDE-ABC123)
-  gatewayResponse   Json?
-  
+  provider        String // "paystack" or "stripe"
+  transactionRef  String? @unique
+  bankReference   String? // For bank transfer tracking (e.g., RIDE-ABC123)
+  gatewayResponse Json?
+
   // Metadata
-  paidAt            DateTime?
-  failedAt          DateTime?
-  failureReason     String?
-  
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  paidAt        DateTime?
+  failedAt      DateTime?
+  failureReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([status])
@@ -221,58 +233,58 @@ model Payment {
 }
 
 model PaymentMethod {
-  id                String              @id @default(cuid())
-  userId            String
-  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  type              PaymentMethodType
-  provider          String              // "paystack" or "stripe"
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type     PaymentMethodType
+  provider String // "paystack" or "stripe"
+
   // Card Details (encrypted/tokenized)
-  cardLast4         String?
-  cardBrand         String?             // Visa, Mastercard, etc.
-  cardToken         String?             // Payment gateway token
-  
+  cardLast4 String?
+  cardBrand String? // Visa, Mastercard, etc.
+  cardToken String? // Payment gateway token
+
   // Bank Details
-  bankName          String?
-  accountLast4      String?
-  
-  isDefault         Boolean             @default(false)
-  
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  bankName     String?
+  accountLast4 String?
+
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
 
 model SavedLocation {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  name        String   // "Home", "Office", "Gym", etc.
-  address     String
-  latitude    Float
-  longitude   Float
-  icon        String?  // Icon identifier
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name      String // "Home", "Office", "Gym", etc.
+  address   String
+  latitude  Float
+  longitude Float
+  icon      String? // Icon identifier
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
 
 model RideType {
-  id          String   @id @default(cuid())
-  name        String   @unique // Economy, Standard, Premium, Keke
+  id          String  @id @default(cuid())
+  name        String  @unique // Economy, Standard, Premium, Keke
   description String?
-  basePrice   Float    // Base fare
-  pricePerKm  Float    // Price per kilometer
+  basePrice   Float // Base fare
+  pricePerKm  Float // Price per kilometer
   icon        String?
-  isActive    Boolean  @default(true)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Wallet {
@@ -282,39 +294,39 @@ model Wallet {
   balance   Float    @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   transactions WalletTransaction[]
-  
+
   @@index([userId])
 }
 
 model WalletTransaction {
-  id          String             @id @default(cuid())
+  id          String            @id @default(cuid())
   walletId    String
-  wallet      Wallet             @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  wallet      Wallet            @relation(fields: [walletId], references: [id], onDelete: Cascade)
   type        TransactionType
   amount      Float
   description String
-  reference   String?            @unique
-  status      TransactionStatus  @default(PENDING)
-  createdAt   DateTime           @default(now())
-  
+  reference   String?           @unique
+  status      TransactionStatus @default(PENDING)
+  createdAt   DateTime          @default(now())
+
   @@index([walletId])
   @@index([createdAt])
 }
 
 model VirtualAccount {
-  id                    String   @id @default(cuid())
-  userId                String   @unique
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accountNumber         String   @unique
-  accountName           String
-  bankName              String
-  paystackCustomerCode  String   @unique
-  paystackAccountId     String?  @unique
-  isActive              Boolean  @default(true)
-  createdAt             DateTime @default(now())
-  
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountNumber        String   @unique
+  accountName          String
+  bankName             String
+  paystackCustomerCode String   @unique
+  paystackAccountId    String?  @unique
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+
   @@index([userId])
   @@index([accountNumber])
 }

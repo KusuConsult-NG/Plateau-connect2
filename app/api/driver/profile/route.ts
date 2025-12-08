@@ -42,15 +42,21 @@ export async function POST(request: Request) {
             licensePlate,
             licenseNumber,
             licenseExpiry,
-            licenseDocument,
+            licenseFrontImage,
+            licenseBackImage,
             vehicleRegistration,
             insurance,
+            nationalIdType,
+            nationalIdNumber,
+            nationalIdDocument,
+            proofOfAddress,
+            bvn,
             bankName,
             accountNumber,
             accountName,
         } = body
 
-        // Validate required fields
+        // Validate required personal details
         if (!firstName || !lastName || !email || !phone || !address) {
             return NextResponse.json(
                 { error: 'Missing required personal details' },
@@ -58,6 +64,15 @@ export async function POST(request: Request) {
             )
         }
 
+        // Validate mandatory profile picture
+        if (!profilePicture) {
+            return NextResponse.json(
+                { error: 'Profile/passport photograph is required for KYC verification' },
+                { status: 400 }
+            )
+        }
+
+        // Validate vehicle information
         if (!vehicleType || !vehicleMake || !vehicleModel || !vehicleYear || !vehicleColor || !licensePlate) {
             return NextResponse.json(
                 { error: 'Missing required vehicle information' },
@@ -65,6 +80,7 @@ export async function POST(request: Request) {
             )
         }
 
+        // Validate driver's license details
         if (!licenseNumber || !licenseExpiry) {
             return NextResponse.json(
                 { error: 'Missing required license information' },
@@ -72,7 +88,37 @@ export async function POST(request: Request) {
             )
         }
 
-        // Create driver profile
+        // Validate mandatory document uploads
+        if (!licenseFrontImage || !licenseBackImage) {
+            return NextResponse.json(
+                { error: 'Driver\'s license front and back images are required' },
+                { status: 400 }
+            )
+        }
+
+        if (!vehicleRegistration) {
+            return NextResponse.json(
+                { error: 'Vehicle registration document is required' },
+                { status: 400 }
+            )
+        }
+
+        if (!insurance) {
+            return NextResponse.json(
+                { error: 'Vehicle insurance certificate is required' },
+                { status: 400 }
+            )
+        }
+
+        // Validate National ID (KYC requirement for Nigeria)
+        if (!nationalIdType || !nationalIdNumber || !nationalIdDocument) {
+            return NextResponse.json(
+                { error: 'National ID information and document are required for KYC verification' },
+                { status: 400 }
+            )
+        }
+
+        // Create driver profile with all KYC documents
         const driverProfile = await prisma.driverProfile.create({
             data: {
                 userId: session.user.id,
@@ -90,9 +136,15 @@ export async function POST(request: Request) {
                 licensePlate,
                 licenseNumber,
                 licenseExpiry: new Date(licenseExpiry),
-                licenseDocument,
+                licenseFrontImage,
+                licenseBackImage,
                 vehicleRegistration,
                 insurance,
+                nationalIdType,
+                nationalIdNumber,
+                nationalIdDocument,
+                proofOfAddress: proofOfAddress || null,
+                bvn: bvn || null,
                 bankName,
                 accountNumber,
                 accountName,
