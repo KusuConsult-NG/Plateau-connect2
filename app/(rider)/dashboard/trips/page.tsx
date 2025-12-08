@@ -80,7 +80,8 @@ export default function TripsPage() {
                                             <span>{formatDateTime(ride.createdAt)}</span>
                                             <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${ride.status === 'COMPLETED' ? 'bg-success/10 text-success' :
                                                 ride.status === 'CANCELLED' ? 'bg-error/10 text-error' :
-                                                    'bg-primary/10 text-primary'
+                                                    ride.status === 'PENDING' ? 'bg-warning/10 text-warning' :
+                                                        'bg-primary/10 text-primary'
                                                 }`}>
                                                 {ride.status}
                                             </span>
