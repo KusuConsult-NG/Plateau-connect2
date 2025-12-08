@@ -27,9 +27,4 @@ ALTER TABLE "Payment" ADD COLUMN IF NOT EXISTS "transactionRef" TEXT;
 ALTER TABLE "Payment" ADD COLUMN IF NOT EXISTS "gatewayResponse" JSONB;
 
 -- Ensure Uniqueness
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Payment_transactionRef_key') THEN
-        ALTER TABLE "Payment" ADD CONSTRAINT "Payment_transactionRef_key" UNIQUE ("transactionRef");
-    END IF;
-END $$;
+
