@@ -302,4 +302,3 @@ async function handleRidePaymentTransfer(data: any) {
         throw error
     }
 }
-```
