@@ -57,7 +57,10 @@ export async function GET(request: Request) {
                     select: { id: true, status: true, amount: true },
                 },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: [
+                { departureTime: 'asc' }, // Prioritize scheduled time
+                { createdAt: 'desc' }
+            ],
             take: 50,
         })
 
@@ -102,6 +105,8 @@ export async function POST(request: Request) {
             destinationLatitude,
             destinationLongitude,
             rideType,
+            departureTime, // Extract departureTime
+            metadata,
         } = body
 
         // Validate required fields
@@ -145,6 +150,7 @@ export async function POST(request: Request) {
                 estimatedFare,
                 distance,
                 status: 'PENDING',
+                departureTime: departureTime || metadata?.departureTime, // Support both top-level and metadata
             },
             include: {
                 rider: {
