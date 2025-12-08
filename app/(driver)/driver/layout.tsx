@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { FiGrid, FiDollarSign, FiClock, FiSettings, FiHelpCircle, FiMapPin } from 'react-icons/fi'
 
 const navigation = [
@@ -13,6 +13,17 @@ const navigation = [
 
 export default function DriverLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
+    const { data: session } = useSession()
+
+    // Get user initials from name
+    const getInitials = (name: string | undefined | null) => {
+        if (!name) return 'DR'
+        const parts = name.split(' ')
+        if (parts.length >= 2) {
+            return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+        }
+        return name.substring(0, 2).toUpperCase()
+    }
 
     return (
         <div className="min-h-screen bg-dark-bg flex">
@@ -33,12 +44,12 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
                     <div className="flex items-center space-x-4 p-4 rounded-xl bg-dark-bg-tertiary/50 border border-dark-border hover:border-primary/30 transition-colors">
                         <div className="relative">
                             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
-                                <span className="text-sm font-bold text-white">JD</span>
+                                <span className="text-sm font-bold text-white">{getInitials(session?.user?.name)}</span>
                             </div>
                             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-success rounded-full border-2 border-dark-bg-tertiary"></div>
                         </div>
                         <div>
-                            <p className="font-bold text-white">John Doe</p>
+                            <p className="font-bold text-white">{session?.user?.name || 'Driver'}</p>
                             <div className="flex items-center space-x-1.5">
                                 <span className="w-2 h-2 rounded-full bg-success animate-pulse"></span>
                                 <p className="text-xs text-success font-medium">Online</p>
