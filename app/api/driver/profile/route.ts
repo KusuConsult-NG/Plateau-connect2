@@ -88,6 +88,33 @@ export async function POST(request: Request) {
             )
         }
 
+        // Validate license expiry date
+        const expiryDate = new Date(licenseExpiry)
+        const today = new Date()
+        const maxDate = new Date()
+        maxDate.setFullYear(maxDate.getFullYear() + 10)
+
+        if (isNaN(expiryDate.getTime())) {
+            return NextResponse.json(
+                { error: 'Invalid license expiry date format' },
+                { status: 400 }
+            )
+        }
+
+        if (expiryDate < today) {
+            return NextResponse.json(
+                { error: 'License has already expired. Please renew your license before registering.' },
+                { status: 400 }
+            )
+        }
+
+        if (expiryDate > maxDate) {
+            return NextResponse.json(
+                { error: 'License expiry date cannot be more than 10 years in the future' },
+                { status: 400 }
+            )
+        }
+
         // Validate mandatory document uploads
         if (!licenseFrontImage || !licenseBackImage) {
             return NextResponse.json(
