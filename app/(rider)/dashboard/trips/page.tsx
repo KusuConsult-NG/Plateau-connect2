@@ -77,8 +77,8 @@ function PaymentOptionsModal({
                                 onClick={handleWalletPay}
                                 disabled={!options.canPayFromWallet || paying}
                                 className={`w-full p-4 rounded-xl border-2 flex items-center justify-between group transition-all duration-300 ${options.canPayFromWallet
-                                        ? 'border-primary/30 hover:border-primary bg-primary/5 hover:bg-primary/10'
-                                        : 'border-dark-border opacity-50 cursor-not-allowed bg-dark-bg-tertiary'
+                                    ? 'border-primary/30 hover:border-primary bg-primary/5 hover:bg-primary/10'
+                                    : 'border-dark-border opacity-50 cursor-not-allowed bg-dark-bg-tertiary'
                                     }`}
                             >
                                 <div className="flex items-center space-x-4">
@@ -93,7 +93,7 @@ function PaymentOptionsModal({
                                         </p>
                                     </div>
                                 </div>
-                                {PAYING ? (
+                                {paying ? (
                                     <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
                                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${options.canPayFromWallet ? 'border-primary' : 'border-gray-600'
