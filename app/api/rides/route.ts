@@ -36,60 +36,59 @@ export async function GET(request: Request) {
                 // Show driver's own rides
                 where.driverId = session.user.id
             }
+        } else if (session.user.role === 'ADMIN') {
+            // Admin can see all rides
+            if (status && !type) {
+                where.status = status
+            }
+        } else {
+            // Fallback for undefined roles - Show nothing or error
+            return NextResponse.json({ rides: [] })
         }
-    } else if (session.user.role === 'ADMIN') {
-        // Admin can see all rides
-        if (status && !type) {
-            where.status = status
-        }
-    } else {
-        // Fallback for undefined roles - Show nothing or error
-        return NextResponse.json({ rides: [] })
+
+
+        const rides = await prisma.ride.findMany({
+            where,
+            include: {
+                rider: {
+                    select: { id: true, name: true, email: true },
+                },
+                driver: {
+                    select: { id: true, name: true, email: true },
+                },
+                payment: {
+                    select: { id: true, status: true, amount: true },
+                },
+            },
+            orderBy: [
+                { departureTime: 'asc' }, // Prioritize scheduled time
+                { createdAt: 'desc' }
+            ],
+            take: 50,
+        })
+
+
+        return NextResponse.json({ rides })
+    } catch (error) {
+        // Enhanced error logging for production debugging
+        console.error('=== RIDES API ERROR ===')
+        console.error('Error type:', error?.constructor?.name)
+        console.error('Error message:', error instanceof Error ? error.message : String(error))
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+        console.error('Session user ID:', session?.user?.id)
+        console.error('Session user role:', session?.user?.role)
+        console.error('========================')
+
+        // Return detailed error in development, generic in production
+        const errorMessage = process.env.NODE_ENV === 'development'
+            ? `Failed to fetch rides: ${error instanceof Error ? error.message : String(error)}`
+            : 'Failed to fetch rides'
+
+        return NextResponse.json(
+            { error: errorMessage },
+            { status: 500 }
+        )
     }
-
-
-    const rides = await prisma.ride.findMany({
-        where,
-        include: {
-            rider: {
-                select: { id: true, name: true, email: true },
-            },
-            driver: {
-                select: { id: true, name: true, email: true },
-            },
-            payment: {
-                select: { id: true, status: true, amount: true },
-            },
-        },
-        orderBy: [
-            { departureTime: 'asc' }, // Prioritize scheduled time
-            { createdAt: 'desc' }
-        ],
-        take: 50,
-    })
-
-
-    return NextResponse.json({ rides })
-} catch (error) {
-    // Enhanced error logging for production debugging
-    console.error('=== RIDES API ERROR ===')
-    console.error('Error type:', error?.constructor?.name)
-    console.error('Error message:', error instanceof Error ? error.message : String(error))
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
-    console.error('Session user ID:', session?.user?.id)
-    console.error('Session user role:', session?.user?.role)
-    console.error('========================')
-
-    // Return detailed error in development, generic in production
-    const errorMessage = process.env.NODE_ENV === 'development'
-        ? `Failed to fetch rides: ${error instanceof Error ? error.message : String(error)}`
-        : 'Failed to fetch rides'
-
-    return NextResponse.json(
-        { error: errorMessage },
-        { status: 500 }
-    )
-}
 }
 
 // POST - Create a new ride request
