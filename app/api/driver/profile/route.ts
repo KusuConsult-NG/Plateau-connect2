@@ -247,3 +247,85 @@ export async function GET() {
         )
     }
 }
+
+export async function PUT(request: Request) {
+    try {
+        const session = await getServerSession(authOptions)
+
+        if (!session?.user || session.user.role !== 'DRIVER') {
+            return NextResponse.json(
+                { error: 'Unauthorized. Only drivers can update their profile.' },
+                { status: 401 }
+            )
+        }
+
+        const body = await request.json()
+        const {
+            firstName,
+            lastName,
+            phone,
+            address,
+            vehicleMake,
+            vehicleModel,
+            vehicleYear,
+            vehicleColor,
+            licensePlate,
+            bankName,
+            accountNumber,
+            accountName,
+        } = body
+
+        // Check if profile exists
+        const existingProfile = await prisma.driverProfile.findUnique({
+            where: { userId: session.user.id },
+        })
+
+        if (!existingProfile) {
+            return NextResponse.json(
+                { error: 'Driver profile not found' },
+                { status: 404 }
+            )
+        }
+
+        // Update profile with provided fields
+        const updatedProfile = await prisma.driverProfile.update({
+            where: { userId: session.user.id },
+            data: {
+                ...(firstName && { firstName }),
+                ...(lastName && { lastName }),
+                ...(phone && { phone }),
+                ...(address && { address }),
+                ...(vehicleMake && { vehicleMake }),
+                ...(vehicleModel && { vehicleModel }),
+                ...(vehicleYear && { vehicleYear: parseInt(vehicleYear) }),
+                ...(vehicleColor && { vehicleColor }),
+                ...(licensePlate && { licensePlate }),
+                ...(bankName && { bankName }),
+                ...(accountNumber && { accountNumber }),
+                ...(accountName && { accountName }),
+            },
+        })
+
+        // Update user's name if firstName or lastName changed
+        if (firstName || lastName) {
+            await prisma.user.update({
+                where: { id: session.user.id },
+                data: {
+                    name: `${firstName || existingProfile.firstName} ${lastName || existingProfile.lastName}`,
+                    ...(phone && { phone }),
+                },
+            })
+        }
+
+        return NextResponse.json({
+            success: true,
+            profile: updatedProfile,
+        })
+    } catch (error) {
+        console.error('Driver profile update error:', error)
+        return NextResponse.json(
+            { error: 'Failed to update driver profile' },
+            { status: 500 }
+        )
+    }
+}
