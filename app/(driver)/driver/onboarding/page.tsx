@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { FiUpload, FiCheck } from 'react-icons/fi'
 
 const STEPS = [
@@ -13,7 +14,10 @@ const STEPS = [
 
 export default function DriverOnboarding() {
     const router = useRouter()
+    const { data: session } = useSession()
     const [currentStep, setCurrentStep] = useState(0)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [error, setError] = useState('')
     const [formData, setFormData] = useState({
         // Personal Details
         firstName: '',
@@ -44,15 +48,53 @@ export default function DriverOnboarding() {
         accountName: '',
     })
 
+    // Pre-populate email from session
+    useEffect(() => {
+        if (session?.user?.email) {
+            setFormData(prev => ({
+                ...prev,
+                email: session.user.email || '',
+            }))
+        }
+    }, [session])
+
     const progress = ((currentStep + 1) / STEPS.length) * 100
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (currentStep < STEPS.length - 1) {
             setCurrentStep(currentStep + 1)
         } else {
             // Submit form
-            console.log('Form submitted:', formData)
+            await handleSubmit()
+        }
+    }
+
+    const handleSubmit = async () => {
+        setIsSubmitting(true)
+        setError('')
+
+        try {
+            const response = await fetch('/api/driver/profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to create driver profile')
+            }
+
+            console.log('Driver profile created successfully:', data)
             router.push('/driver')
+        } catch (err) {
+            console.error('Form submission error:', err)
+            setError(err instanceof Error ? err.message : 'Failed to submit application')
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
@@ -120,6 +162,13 @@ export default function DriverOnboarding() {
                             <span className="text-sm font-medium text-primary">{progress.toFixed(0)}%</span>
                         </div>
 
+                        {/* Error Message */}
+                        {error && (
+                            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm">
+                                {error}
+                            </div>
+                        )}
+
                         {/* Progress Bar */}
                         <div className="w-full bg-dark-bg-tertiary rounded-full h-2 mt-3">
                             <div
@@ -148,9 +197,10 @@ export default function DriverOnboarding() {
                         </button>
                         <button
                             onClick={handleNext}
-                            className="btn-primary px-8"
+                            disabled={isSubmitting}
+                            className="btn-primary px-8 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {currentStep === STEPS.length - 1 ? 'Submit Application' : 'Next Step'}
+                            {isSubmitting ? 'Submitting...' : currentStep === STEPS.length - 1 ? 'Submit Application' : 'Next Step'}
                         </button>
                     </div>
                 </div>
