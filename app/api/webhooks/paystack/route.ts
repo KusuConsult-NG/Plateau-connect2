@@ -50,8 +50,13 @@ export async function POST(request: Request) {
                 break
 
             case 'transfer.success':
-                // Virtual account credit
-                await handleVirtualAccountCredit(event.data)
+                // Check if it's a ride payment or wallet funding
+                const transferDescription = event.data.narration || event.data.description || ''
+                if (transferDescription.includes('RIDE-')) {
+                    await handleRidePaymentTransfer(event.data)
+                } else {
+                    await handleVirtualAccountCredit(event.data)
+                }
                 break
 
             case 'transfer.failed':
@@ -216,3 +221,85 @@ async function handleVirtualAccountCredit(data: any) {
         throw error
     }
 }
+
+async function handleRidePaymentTransfer(data: any) {
+    try {
+        const narration = data.narration || data.description || ''
+        const match = narration.match(/RIDE-([A-Z0-9]{8})/i)
+
+        if (!match) {
+            console.error('No ride reference found in transfer narration')
+            return
+        }
+
+        const rideIdPrefix = match[1].toLowerCase()
+
+        // Find ride starting with this ID
+        const ride = await prisma.ride.findFirst({
+            where: {
+                id: {
+                    startsWith: rideIdPrefix,
+                },
+            },
+            include: {
+                payment: true,
+            },
+        })
+
+        if (!ride) {
+            console.error('Ride not found for reference:', match[0])
+            return
+        }
+
+        const amount = data.amount / 100 // Convert from kobo to naira
+
+        // Verify amount matches
+        if (Math.abs(amount - ride.estimatedFare) > 1) {
+            console.error(`Amount mismatch: expected ${ride.estimatedFare}, got ${amount}`)
+            return
+        }
+
+        const reference = data.reference || data.transaction_reference
+
+        // Check if already processed
+        if (ride.payment && ride.payment.status === 'COMPLETED') {
+            console.log('Ride already paid:', ride.id)
+            return
+        }
+
+        // Create or update payment record
+        if (ride.payment) {
+            await prisma.payment.update({
+                where: { id: ride.payment.id },
+                data: {
+                    status: 'COMPLETED',
+                    ridePaymentMethod: 'BANK_TRANSFER',
+                    bankReference: match[0],
+                    transactionRef: reference,
+                    paidAt: new Date(),
+                },
+            })
+        } else {
+            await prisma.payment.create({
+                data: {
+                    rideId: ride.id,
+                    userId: ride.riderId,
+                    amount: ride.estimatedFare,
+                    status: 'COMPLETED',
+                    paymentMethod: 'BANK_TRANSFER',
+                    ridePaymentMethod: 'BANK_TRANSFER',
+                    provider: 'paystack',
+                    transactionRef: reference,
+                    bankReference: match[0],
+                    paidAt: new Date(),
+                },
+            })
+        }
+
+        console.log(`✅ Ride payment confirmed via bank transfer: ${match[0]} - ₦${amount}`)
+    } catch (error) {
+        console.error('Error handling ride payment transfer:', error)
+        throw error
+    }
+}
+```

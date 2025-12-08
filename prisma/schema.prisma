@@ -36,6 +36,12 @@ enum PaymentMethodType {
   BANK_TRANSFER
 }
 
+enum RidePaymentMethod {
+  WALLET
+  CARD
+  BANK_TRANSFER
+}
+
 enum TransactionType {
   DEPOSIT
   WITHDRAWAL
@@ -191,10 +197,12 @@ model Payment {
   currency          String          @default("NGN")
   status            PaymentStatus   @default(PENDING)
   paymentMethod     PaymentMethodType
+  ridePaymentMethod RidePaymentMethod @default(CARD)
   
   // Payment Gateway
   provider          String          // "paystack" or "stripe"
   transactionRef    String?         @unique
+  bankReference     String?         // For bank transfer tracking (e.g., RIDE-ABC123)
   gatewayResponse   Json?
   
   // Metadata
@@ -208,6 +216,7 @@ model Payment {
   @@index([userId])
   @@index([status])
   @@index([transactionRef])
+  @@index([bankReference])
 }
 
 model PaymentMethod {
