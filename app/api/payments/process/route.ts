@@ -71,7 +71,7 @@ export async function POST(request: Request) {
                 paidAt: new Date(),
                 gatewayResponse: verifyData.data,
                 // Connect ride if ID exists
-                ride: rideId ? { connect: { id: rideId } } : undefined,
+                rideId: rideId || undefined,
             },
         })
 
