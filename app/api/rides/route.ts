@@ -28,6 +28,10 @@ export async function GET(request: Request) {
                 // Show pending rides with no driver
                 where.status = 'PENDING'
                 where.driverId = null
+            } else if (type === 'active') {
+                // Show current active ride
+                where.driverId = session.user.id
+                where.status = { in: ['ACCEPTED', 'IN_PROGRESS'] }
             } else {
                 // Show driver's own rides
                 where.driverId = session.user.id
