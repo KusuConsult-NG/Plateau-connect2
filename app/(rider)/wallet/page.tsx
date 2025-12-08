@@ -170,7 +170,7 @@ export default function WalletPage() {
                                     </div>
                                 )}
                                 <div className="bg-success/10 border border-success/30 rounded-lg p-3">
-                                    <p className="text-xs text-success">✨ Transfer any amount and your wallet will be credited automatically!</p>
+                                    <p className="text-xs text-success">✨ Transfer the amount into the account above to confirm your trip</p>
                                 </div>
                             </div>
                         )}
