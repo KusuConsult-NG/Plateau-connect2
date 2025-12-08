@@ -4,7 +4,8 @@ import { useSession } from 'next-auth/react'
 import useSWR from 'swr'
 import { useState } from 'react'
 import PaymentButton from '@/components/PaymentButton'
-import { FiMapPin, FiClock, FiCalendar, FiCreditCard, FiX } from 'react-icons/fi'
+import TripSummaryModal from '@/components/TripSummaryModal'
+import { FiMapPin, FiClock, FiCalendar, FiCreditCard, FiX, FiFileText } from 'react-icons/fi'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 
 // Fetcher for SWR
@@ -178,6 +179,7 @@ export default function TripsPage() {
     const { data: session } = useSession()
     const [cancellingId, setCancellingId] = useState<string | null>(null)
     const [selectedRideForPayment, setSelectedRideForPayment] = useState<{ id: string, amount: number } | null>(null)
+    const [selectedRideForSummary, setSelectedRideForSummary] = useState<any | null>(null)
 
     // Fetch rides for the current user
     const { data, error, mutate } = useSWR('/api/rides?role=RIDER', fetcher, {
@@ -287,9 +289,20 @@ export default function TripsPage() {
                                         </p>
 
                                         {isPaid ? (
-                                            <div className="flex items-center space-x-2 text-success font-bold bg-success/10 px-3 py-2 rounded-lg">
-                                                <FiCreditCard />
-                                                <span>Paid</span>
+                                            <div className="flex flex-col space-y-2">
+                                                <div className="flex items-center space-x-2 text-success font-bold bg-success/10 px-3 py-2 rounded-lg justify-center">
+                                                    <FiCreditCard />
+                                                    <span>Paid</span>
+                                                </div>
+                                                {ride.status === 'COMPLETED' && (
+                                                    <button
+                                                        onClick={() => setSelectedRideForSummary(ride)}
+                                                        className="btn-outline border-primary/30 text-primary hover:bg-primary/10 w-full py-2 px-4 text-sm font-bold flex items-center justify-center space-x-2"
+                                                    >
+                                                        <FiFileText className="w-4 h-4" />
+                                                        <span>View Summary</span>
+                                                    </button>
+                                                )}
                                             </div>
                                         ) : isCancelled ? (
                                             <span className="text-dark-text-secondary">Cancelled</span>
@@ -338,6 +351,14 @@ export default function TripsPage() {
                         setSelectedRideForPayment(null)
                         mutate()
                     }}
+                />
+            )}
+
+            {/* Trip Summary Modal */}
+            {selectedRideForSummary && (
+                <TripSummaryModal
+                    ride={selectedRideForSummary}
+                    onClose={() => setSelectedRideForSummary(null)}
                 />
             )}
         </div>

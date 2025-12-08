@@ -51,13 +51,13 @@ export async function GET(request: Request) {
             where,
             include: {
                 rider: {
-                    select: { id: true, name: true, email: true },
+                    select: { id: true, name: true, email: true, phone: true },
                 },
                 driver: {
-                    select: { id: true, name: true, email: true },
+                    select: { id: true, name: true, email: true, phone: true },
                 },
                 payment: {
-                    select: { id: true, status: true, amount: true },
+                    select: { id: true, status: true, amount: true, paymentMethod: true },
                 },
             },
             orderBy: [
@@ -67,8 +67,30 @@ export async function GET(request: Request) {
             take: 50,
         })
 
+        // Fetch driver profiles for rides that have drivers
+        const ridesWithDriverProfiles = await Promise.all(
+            rides.map(async (ride) => {
+                if (ride.driverId) {
+                    const driverProfile = await prisma.driverProfile.findUnique({
+                        where: { userId: ride.driverId },
+                        select: {
+                            vehicleMake: true,
+                            vehicleModel: true,
+                            vehicleYear: true,
+                            vehicleColor: true,
+                            licensePlate: true,
+                            rating: true,
+                            totalTrips: true,
+                        },
+                    })
+                    return { ...ride, driverProfile }
+                }
+                return ride
+            })
+        )
 
-        return NextResponse.json({ rides })
+
+        return NextResponse.json({ rides: ridesWithDriverProfiles })
     } catch (error) {
         // Enhanced error logging for production debugging
         console.error('=== RIDES API ERROR ===')
