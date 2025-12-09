@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { FiLock, FiCheckCircle, FiAlertCircle } from 'react-icons/fi'
+import { FiLock, FiCheckCircle, FiAlertCircle, FiEye, FiEyeOff } from 'react-icons/fi'
 
 function ResetPasswordForm() {
     const searchParams = useSearchParams()
@@ -12,6 +12,8 @@ function ResetPasswordForm() {
 
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
     const [error, setError] = useState('')
@@ -122,14 +124,21 @@ function ResetPasswordForm() {
                             </span>
                             <input
                                 id="password"
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="input-field pl-10"
+                                className="input-field pl-10 pr-12"
                                 placeholder="Enter new password"
                                 minLength={6}
                                 required
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                            >
+                                {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                            </button>
                         </div>
                         <p className="text-xs text-dark-text-secondary">Must be at least 6 characters</p>
                     </div>
@@ -144,14 +153,21 @@ function ResetPasswordForm() {
                             </span>
                             <input
                                 id="confirmPassword"
-                                type="password"
+                                type={showConfirmPassword ? 'text' : 'password'}
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="input-field pl-10"
+                                className="input-field pl-10 pr-12"
                                 placeholder="Confirm new password"
                                 minLength={6}
                                 required
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                            >
+                                {showConfirmPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                            </button>
                         </div>
                     </div>
 

@@ -4,13 +4,13 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { FiMapPin } from 'react-icons/fi'
-import { FiActivity } from 'react-icons/fi'
+import { FiMapPin, FiActivity, FiEye, FiEyeOff } from 'react-icons/fi'
 
 export default function LoginPage() {
     const router = useRouter()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
@@ -150,14 +150,21 @@ export default function LoginPage() {
                                         </span>
                                         <input
                                             autoComplete="current-password"
-                                            className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-[#137fec]/50 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-[#137fec] h-12 placeholder:text-gray-400 dark:placeholder:text-gray-500 pl-10 pr-3 text-sm font-normal leading-normal transition-all"
+                                            className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-[#137fec]/50 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-[#137fec] h-12 placeholder:text-gray-400 dark:placeholder:text-gray-500 pl-10 pr-12 text-sm font-normal leading-normal transition-all"
                                             id="password"
                                             placeholder="Enter your password"
-                                            type="password"
+                                            type={showPassword ? 'text' : 'password'}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             required
                                         />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                        >
+                                            {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                                        </button>
                                     </div>
                                 </div>
 
